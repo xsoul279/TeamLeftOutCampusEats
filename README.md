@@ -2,6 +2,43 @@
 
 In this project your Scrum team will build **CampusEats**, a web app for rescuing surplus food on campus, over three one-week sprints. Before Sprint 1 starts, your team scores and prioritizes the Product Backlog and plans which user stories go into which sprint. During the sprints you run Scrum events, track work on a Kanban board, use Git and GitHub with one tagged release per sprint, and deploy the app with Docker Compose and PostgreSQL.
 
+# Local Development
+
+Requires Python 3.10 or newer. From the repository root:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+flask run
+```
+
+On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1`.
+Open http://localhost:5000. Stop the development server with Ctrl+C.
+On macOS, if `localhost:5000` returns a 403 response from another service,
+use http://127.0.0.1:5000 to reach the Flask server directly.
+If port 5000 is occupied, use `flask run --port 5001` and open
+http://localhost:5001 instead.
+
+The current platform skeleton provides the home page and shared navigation.
+Docker Compose, PostgreSQL, seed data, and the user stories are subsequent work.
+
+## Application Structure
+
+- `src/campuseats/__init__.py`: `create_app` factory and blueprint registration.
+- `src/campuseats/main.py`: public home page at `/` (`main.index`).
+- `src/campuseats/templates/base.html`: shared layout, navigation, and flash messages.
+- `src/campuseats/templates/index.html`: home page extending the shared layout.
+- `src/campuseats/static/css/site.css`: responsive styles served locally.
+- `.flaskenv`: public Flask application path so `flask run` works from the root.
+
+Feature routes should live in their own blueprints, registered in `create_app`.
+Initialize shared extensions with `init_app(app)` inside that factory. Extend
+`base.html` and fill its `title`, `content`, and optional `nav_items`, `extra_head`,
+and `extra_scripts` blocks. The factory reads `SECRET_KEY` from the environment;
+configure it before adding session-based features. Keep private settings in the
+ignored `.env` file rather than `.flaskenv`.
+
 # Teams Setup
 
 Teams must have 3 to 5 members, no exceptions. Your team does not need to be the same as in previous project.

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="hero" aria-labelledby="hero-title">
+    <p class="eyebrow">Good food. Stronger community.</p>
+    <h1 id="hero-title">A second serving.<br>A little less waste.</h1>
+    <p class="hero-description">Bringing campus vendors and students together to give surplus food a place at the table.</p>
+    <a class="button" href="#how-it-works">See how it works <span aria-hidden="true">&darr;</span></a>
+    <div class="hero-note">
+      <span class="note-dot" aria-hidden="true"></span>
+      Made for your campus
+    </div>
+  </section>
+
+  <section id="how-it-works" class="how-it-works" aria-labelledby="steps-title">
+    <div class="section-heading">
+      <p class="eyebrow">From surplus to shared</p>
+      <h2 id="steps-title">A good meal goes a little further.</h2>
+    </div>
+    <ol class="steps">
+      <li class="step">
+        <span class="step-number" aria-hidden="true">01</span>
+        <h3>Vendors share surplus</h3>
+        <p>Campus food vendors list extra portions with a pickup location and time.</p>
+      </li>
+      <li class="step">
+        <span class="step-number" aria-hidden="true">02</span>
+        <h3>Students reserve a meal</h3>
+        <p>Students find food nearby and reserve portions for pickup.</p>
+      </li>
+      <li class="step">
+        <span class="step-number" aria-hidden="true">03</span>
+        <h3>Pick up on campus</h3>
+        <p>A pickup code connects each reservation with the right student.</p>
+      </li>
+    </ol>
+  </section>
+{% endblock %}
