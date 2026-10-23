@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:17-bookworm@sha256:858bb5e98eed02eb8cafbcdc007f9a65d1b613972028944a8ec2133ccaf80d27
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-campuseats}
+      POSTGRES_USER: ${POSTGRES_USER:-campuseats}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-campuseats-local}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    build: .
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-campuseats}
+      POSTGRES_USER: ${POSTGRES_USER:-campuseats}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-campuseats-local}
+      DATABASE_URL: ${DATABASE_URL:-}
+      SECRET_KEY: ${SECRET_KEY:-}
+    ports:
+      - "127.0.0.1:${WEB_PORT:-5000}:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    init: true
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
