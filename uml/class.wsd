@@ -1,12 +1,88 @@
 @startuml class
 
-class User {
-    email
-    name
-    creation_date
-    role
-    password
-    active
+' ========== KEY ==========
+' Numbers on the lines (how many):
+'   1      = exactly one
+'   0..1   = none or one
+'   0..*   = none, one, or a bunch (any amount)
+'   1..*   = at least one
+
+' "enum" = fixed list of options. User is either a STUDENT or a VENDOR
+enum Role {
+    STUDENT
+    VENDOR
 }
+
+class User {
+    id : int
+    name : str
+    email : str {unique}
+    password_hash : str
+
+    ' role uses the Role list up top
+    role : Role
+    creation_date : datetime
+    active : bool
+}
+
+class Listing {
+    id : int
+    title : str
+    description : str
+
+    ' {1..100} = has to be between 1 and 100
+    portions : int {1..100}
+    portions_remaining : int
+    pickup_location : str
+    pickup_start : datetime
+    pickup_end : datetime
+    cancelled : bool
+    created_at : datetime
+
+    ' [0..*] = zero or more tags. A listing can have none, one, or a bunch.
+    tags : DietaryTag [0..*]
+
+    ' The / means we calculate this
+    ' Cancelled? -> cancelled. Past pickup_end? -> ended. Otherwise -> active.
+    /status : active | ended | cancelled
+}
+
+' No vendor or student fields in here. The lines at the bottom handle that.
+class Reservation {
+    id : int
+    portions : int {1..2}
+    pickup_code : str {unique, 6 chars}
+    status : ReservationStatus
+    created_at : datetime
+}
+
+enum ReservationStatus {
+    ACTIVE
+    PICKED_UP
+    CANCELLED
+    NO_SHOW
+}
+
+enum DietaryTag {
+    VEGETARIAN
+    VEGAN
+    GLUTEN_FREE
+    HALAL
+    CONTAINS_NUTS
+}
+
+' One User has 0..* Listings. One Listing has 1 User (the vendor).
+User "1" -- "0..*" Listing : vendor
+
+' One User has 0..* Reservations. One Reservation has 1 User (the student).
+User "1" -- "0..*" Reservation : student
+
+' One Listing has 0..* Reservations. One Reservation has 1 Listing.
+Listing "1" -- "0..*" Reservation
+
+note bottom of Reservation
+  A student can hold only one ACTIVE
+  reservation per listing (US4 AC 3).
+end note
 
 @enduml
