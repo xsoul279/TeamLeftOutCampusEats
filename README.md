@@ -2,6 +2,57 @@
 
 In this project your Scrum team will build **CampusEats**, a web app for rescuing surplus food on campus, over three one-week sprints. Before Sprint 1 starts, your team scores and prioritizes the Product Backlog and plans which user stories go into which sprint. During the sprints you run Scrum events, track work on a Kanban board, use Git and GitHub with one tagged release per sprint, and deploy the app with Docker Compose and PostgreSQL.
 
+# Docker Deployment
+
+Requires Docker Desktop (running) or Docker Engine with the Compose plugin.
+From the repository root, run:
+
+```bash
+docker compose up --build
+```
+
+Open http://localhost:5000. On macOS, use http://127.0.0.1:5000 if another
+service intercepts `localhost`. If port 5000 is occupied, use
+`WEB_PORT=5001 docker compose up --build` and open http://127.0.0.1:5001.
+In PowerShell, set `$env:WEB_PORT = "5001"` before running Compose.
+
+The `web` service runs Gunicorn as an unprivileged user. Compose waits for a
+healthy PostgreSQL service, then the web entrypoint verifies an authenticated
+SQL connection before starting the app. The database is reachable as `db:5432`
+inside the Compose network and is not published to a host port.
+
+Stop the services with Ctrl+C or `docker compose down`. Database files live in
+the named `postgres_data` volume, so they survive container restarts and
+`docker compose down` followed by another `up`. `docker compose down -v` also
+removes that database volume and resets its contents.
+
+## Container Configuration
+
+Compose reads these optional settings from the shell or an ignored `.env` file:
+
+| Variable | Default / behavior |
+| --- | --- |
+| `POSTGRES_DB` | `campuseats` |
+| `POSTGRES_USER` | `campuseats` |
+| `POSTGRES_PASSWORD` | `campuseats-local`, for local development |
+| `DATABASE_URL` | Built from the database settings, with special characters URL-encoded |
+| `SECRET_KEY` | Randomly generated for the web container when unset |
+| `WEB_PORT` | `5000`, bound to the host loopback address |
+
+Set a stable `SECRET_KEY` to preserve login sessions across web-container
+recreation. The generated key is shared by both workers but changes when the
+container restarts. Use a private database password and secret key for a shared
+deployment. The generated `DATABASE_URL` uses `postgresql+psycopg://`; the Flask
+factory exposes it as `SQLALCHEMY_DATABASE_URI` for the shared model extension.
+If you supply `DATABASE_URL`, URL-encode credentials in that value yourself.
+Plain `postgresql://` and `postgres://` URLs are normalized to the psycopg driver.
+
+Use `docker compose ps` to check service health and `docker compose logs web db`
+to inspect startup. Image digests are pinned for repeatable builds; update the
+image tags and digests together when upgrading the runtime or PostgreSQL.
+Flask management commands use the same database configuration; for example,
+`docker compose exec web flask routes` lists the current application routes.
+
 # Local Development
 
 Requires Python 3.10 or newer. From the repository root:
@@ -20,8 +71,9 @@ use http://127.0.0.1:5000 to reach the Flask server directly.
 If port 5000 is occupied, use `flask run --port 5001` and open
 http://localhost:5001 instead.
 
-The current platform skeleton provides the home page and shared navigation.
-Docker Compose, PostgreSQL, seed data, and the user stories are subsequent work.
+The current platform provides the home page, shared navigation, and a Docker
+Compose deployment with PostgreSQL. Application models, automatic schema setup,
+seed accounts, and the user stories are subsequent work.
 
 ## Application Structure
 
