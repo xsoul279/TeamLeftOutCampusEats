@@ -108,7 +108,7 @@ Each team designates one member as the **Scrum Master** before Sprint 1 begins a
 The Product Owner role is played by the instructor. The instructor has written the backlog and set the user value of each story; your team decides effort, priority within the rules below, and how the work is split.
 
 ```
-Scrum Master: <student's name>
+Scrum Master: Soul Martin (xsoul279)
 ```
 
 # Project Vision
@@ -210,17 +210,17 @@ Before Sprint 1 starts, your team estimates every story and ranks the backlog us
 
 | ID | Short name | User value | Story points | Priority score | Rank |
 | --- | --- | --- | --- | --- | --- |
-| US1 | Register and log in | 3 |  |  |  |
-| US2 | Post a listing | 3 |  |  |  |
-| US3 | Browse listings | 3 |  |  |  |
-| US4 | Reserve portions | 3 |  |  |  |
-| US5 | Manage listings | 2 |  |  |  |
-| US6 | My reservations | 2 |  |  |  |
-| US7 | Confirm pickup | 3 |  |  |  |
-| US8 | Filter listings | 2 |  |  |  |
-| US9 | Impact dashboard | 1 |  |  |  |
-| US10 | Rate a pickup | 1 |  |  |  |
-| **Total** |  |  |  |  |  |
+| US1 | Register and log in | 3 | 5 | 0.60 | 6 |
+| US2 | Post a listing | 3 | 3 | 1.00 | 2 |
+| US3 | Browse listings | 3 | 2 | 1.50 | 1 |
+| US4 | Reserve portions | 3 | 5 | 0.60 | 7 |
+| US5 | Manage listings | 2 | 5 | 0.40 | 8 |
+| US6 | My reservations | 2 | 3 | 0.67 | 5 |
+| US7 | Confirm pickup | 3 | 3 | 1.00 | 3 |
+| US8 | Filter listings | 2 | 2 | 1.00 | 4 |
+| US9 | Impact dashboard | 1 | 3 | 0.33 | 9 |
+| US10 | Rate a pickup | 1 | 3 | 0.33 | 10 |
+| **Total** |  | 23 | 34 |  |  |
 
 Priority Score Formula: 
 
@@ -239,17 +239,21 @@ Before writing any code, split the backlog across the three sprints and record i
 * Planned burndown: list the story points remaining at the start and after each planned sprint.
 
 ```
-Team capacity (story points per sprint): <your team's capacity>
+Team capacity (story points per sprint): 11
 
-Justification (one or two sentences: team size, hours available, course load): <justification>
+Justification (one or two sentences: team size, hours available, course load):
+We have 4 members who can each give about 9 to 10 hours per sprint alongside other courses,
+and our sprints are 5 to 6 days long to finish by Nov 8, so we plan about 11 story points per sprint.
 ```
 
 | Sprint | User stories (in order) | Story points planned | Points remaining after sprint | Dependencies checked (Y/N) |
 | --- | --- | --- | --- | --- |
-| Sprint 1 |  |  |  |  |
-| Sprint 2 |  |  |  |  |
-| Sprint 3 |  |  |  |  |
-| **Total** |  |  | — | — |
+| Sprint 1 | US1 → US2 | 8 | 20 | Y |
+| Sprint 2 | US3 → US4, US8 | 9 | 11 | Y |
+| Sprint 3 | US5, US6, US7 | 11 | 0 | Y |
+| **Total** | US1 to US8 (US9 and US10 not planned) | 28 | — | — |
+
+Planned burndown (story points remaining): start 28 → after Sprint 1: 20 → after Sprint 2: 11 → after Sprint 3: 0
 
 # Sprint Boards
 
