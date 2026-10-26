@@ -71,14 +71,22 @@ use http://127.0.0.1:5000 to reach the Flask server directly.
 If port 5000 is occupied, use `flask run --port 5001` and open
 http://localhost:5001 instead.
 
-The current platform provides the home page, shared navigation, and a Docker
-Compose deployment with PostgreSQL. Application models, automatic schema setup,
-seed accounts, and the user stories are subsequent work.
+The current platform provides the home page, shared navigation, a Docker
+Compose deployment with PostgreSQL, and the database models. Seed accounts and
+the user stories are subsequent work. Plain `flask run` has no database, so use
+Docker Compose for anything that reads or writes data.
+
+The web entrypoint creates any missing tables on startup. It does not change
+tables that already exist, so after editing a model run `docker compose down -v`
+and start again to rebuild the schema (this also deletes the stored data).
 
 ## Application Structure
 
 - `src/campuseats/__init__.py`: `create_app` factory and blueprint registration.
 - `src/campuseats/main.py`: public home page at `/` (`main.index`).
+- `src/campuseats/extensions.py`: shared `db` (Flask-SQLAlchemy) object.
+- `src/campuseats/models.py`: `User`, `Listing`, `Reservation`, and the `Role`,
+  `DietaryTag`, and `ReservationStatus` enums, matching `uml/class.wsd`.
 - `src/campuseats/templates/base.html`: shared layout, navigation, and flash messages.
 - `src/campuseats/templates/index.html`: home page extending the shared layout.
 - `src/campuseats/static/css/site.css`: responsive styles served locally.

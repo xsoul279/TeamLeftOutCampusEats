@@ -7,6 +7,7 @@ from typing import Any
 from flask import Flask
 
 from .config import database_url
+from .extensions import db
 
 
 def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
@@ -20,6 +21,11 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     )
     if test_config is not None:
         app.config.update(test_config)
+
+    # Plain `flask run` has no database, so only connect when one is configured.
+    if app.config["SQLALCHEMY_DATABASE_URI"]:
+        db.init_app(app)
+    from . import models  # noqa: F401  (registers the tables with db)
 
     from .main import bp
 
