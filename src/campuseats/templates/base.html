@@ -20,6 +20,13 @@
           <ul class="nav-links">
             <li><a href="{{ url_for('main.index') }}"{% if request.endpoint == 'main.index' %} aria-current="page"{% endif %}>Home</a></li>
             <li><a href="{{ url_for('main.index', _anchor='how-it-works') }}">How it works</a></li>
+            {% if current_user.is_authenticated %}
+            <li><a href="{{url_for('auth.home') }}">My home</a></li>
+            <li><a href="{{url_for('auth.logout') }}">Logout</a></li>
+            {% else %}
+            <li><a href="{{url_for('auth.register')}}">Register</a></li>
+            <li><a href="{{url_for('auth.login')}}">Login</a></li>
+            {% endif %}
             {% block nav_items %}{% endblock %}
           </ul>
         </nav>
