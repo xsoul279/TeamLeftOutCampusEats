@@ -28,7 +28,18 @@ removes that database volume and resets its contents.
 
 ## Container Configuration
 
-Compose reads these optional settings from the shell or an ignored `.env` file:
+Compose reads these optional settings from the shell or an ignored `.env` file.
+For a local configuration, copy `.env.example` to `.env` (`cp .env.example .env`
+on macOS/Linux, or `Copy-Item .env.example .env` in PowerShell). Replace the
+password and secret-key placeholders before starting Compose. The example
+includes a command to generate a random secret key; keep that key stable to
+preserve sessions across restarts. Keep `.env` private and commit only
+`.env.example`.
+
+Leave `DATABASE_URL` empty to use the Compose database settings. Change database
+credentials before the first start: PostgreSQL initializes them only when its
+data volume is empty. Editing `.env` later does not update an existing database
+user or its password.
 
 | Variable | Default / behavior |
 | --- | --- |
