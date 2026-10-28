@@ -1,4 +1,5 @@
 from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 from .extensions import db, login_manager
 
 
@@ -8,7 +9,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(10), nullable=False, default="user")  # Default role is 'user'
+    role = db.Column(db.String(10), nullable=False)
 
 
     def set_password(self, password):
