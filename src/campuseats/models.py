@@ -7,7 +7,10 @@ from sqlalchemy import CheckConstraint, Enum, ForeignKey, Index, String, Text, t
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .extensions import db
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from .extensions import db, login_manager
 
 
 class Role(enum.Enum):
@@ -42,10 +45,10 @@ class User(db.Model):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(100))
+    name: Mapped[str] = mapped_column(String(100, unique=True))
     email: Mapped[str] = mapped_column(String(255), unique=True)
     password_hash: Mapped[str] = mapped_column(String(255))
-    role: Mapped[Role] = mapped_column(Enum(Role, name="role"))
+    role: Mapped[str] = mapped_column(String(10), default="student"))
     creation_date: Mapped[datetime] = mapped_column(default=datetime.now)
     active: Mapped[bool] = mapped_column(default=True)
 
@@ -129,3 +132,10 @@ class Reservation(db.Model):
 
     student: Mapped[User] = relationship(back_populates="reservations")
     listing: Mapped[Listing] = relationship(back_populates="reservations")
+      
+    @login_manager.user_loader
+    def load_user(user_id):
+      try:
+        return db.session.get(User, int(user_id))
+      except (TypeError, ValueError):
+        return None

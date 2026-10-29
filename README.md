@@ -288,6 +288,19 @@ The instructor must be able to run the app with a single command from the reposi
 
 ```
 docker compose up --build
+
+Seed accounts:
+
+Vendor:
+username = Flat Top Grill
+email = flattopgrill@msudenver.edu
+pass = grilled_cheese8
+
+Student:
+username = Lucky Guy
+email = identityv@msudenver.edu
+pass = luckisAskill2
+
 ```
 
 and then open it at http://localhost:5000. The README must list this command and include seed accounts (at least one vendor and one student with a few sample listings) created automatically on first start, so the app can be graded without manual data entry.

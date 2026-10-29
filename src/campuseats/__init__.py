@@ -7,7 +7,12 @@ from typing import Any
 from flask import Flask
 
 from .config import database_url
-from .extensions import db
+from .extensions import db, login_manager
+from . import models  # noqa: F401  (registers the tables with db)
+from .main import bp
+from .auth import auth_bp
+
+   
 
 
 def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
@@ -22,12 +27,20 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     if test_config is not None:
         app.config.update(test_config)
 
+    login_manager.init_app(app)
+    app.register_blueprint(bp)
+    app.register_blueprint(auth_bp)
+
     # Plain `flask run` has no database, so only connect when one is configured.
     if app.config["SQLALCHEMY_DATABASE_URI"]:
         db.init_app(app)
-    from . import models  # noqa: F401  (registers the tables with db)
+        with app.app_context():
+            db.create_all()
+            from .seed import seed_database
+            
+            seed_database()
+        
 
-    from .main import bp
 
-    app.register_blueprint(bp)
+            
     return app

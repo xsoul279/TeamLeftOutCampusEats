@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Register | CampusEats{% endblock %}
+{% block content %}
+
+<h1>Register</h1>
+<form method="post">
+    <input name="name" placeholder="Name">
+    <input name="email" placeholder="Email">
+    <input name="password" type="password" placeholder="Password">
+    <select name="role">
+        <option value="">Select role</option>
+        <option value="student">Student</option>
+        <option value="vendor">Vendor</option>
+    </select>
+    <button type="submit">Register</button>
+</form>
+<a href="{{ url_for('auth.login') }}">Already have an account? Login</a>
+{% endblock %}
