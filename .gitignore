@@ -1,5 +1,6 @@
 .venv/
 venv/
+# Private environment files; the shared example contains placeholders only.
 .env
 .env.*
 !.env.example
