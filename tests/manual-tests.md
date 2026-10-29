@@ -12,6 +12,68 @@ id |    username    |           email            |  role   | password_hash |
 | 1 | Flat Top Grill | flattopgrill@msudenver.edu | vendor  | scrypt:32768:8:1$PUs4wq9KwXAE7BqZ$7fbbf0b3ea8ccb680a45943aab14d6414cfc567eee76ce4de27f2ae8153bdce1fba9c5dbb51408920af5e777f8dcab5bf1ef497fd0eee19abe0d242ee6660a28 
 | 2 | Lucky Guy   | identityv@msudenver.edu    | student | scrypt:32768:8:1$iJzlcitFV5K9aEld$e9314e7b90e76e062635a273136e3fe903d3bf3b0a96f73def8bad31da5a8187a033b39151c19578773438381036a10e14590d1d2faf8de0aecce65e462dad76 
 | 3 | Caine    | luciferseve@gmail.com      | student | scrypt:32768:8:1$RIl5aGONMllGf88B$81e73e174bc2cb854a98391883578bc189e597410e963e36758576e8726215869301a8eec9ccfe8923996a4c301b2966607891b4aca62a53c06fcd05eab27acc
+
+## US2 Manual test cases ##
+
+## Test 1 - Vendor Posts Listing ##
+Acceptance Criteria 1: "Given I am logged in as a vendor, when I enter a title, description, number of portions (1 to 100), pickup location, zero or more dietary tags (vegetarian, vegan, gluten-free, halal, contains nuts), and a pickup window start and end, and click "Post", then the listing is stored and linked to my vendor account."
+
+Steps:
+1. Log in as vendor
+2. Open new listing page
+3. Enter criteria:
+- Title: Vegetarian Lunch Test
+- Description: Leftover vegetarian lunches
+- Portions: 3
+- Pickup location: Cafeteria counter
+- Dietary tages: vegetarian and gluten free
+- Pickup start: Tomorrow at noon
+- Pickup end: Tomorrow at 1 PM
+4. Post listing
+5. Check PostgreSQL and confirm that the listing was saved as entered.
+
+Expected result: 
+Listing is saved and linked to the vendor who posted the listing. Selected tags should be included. 
+
+Actual result: 
+Listing is saved as confirmed through PostgreSQL. All relevant information is included such as title, description, pickup location, start times, end times, tags, and number of portions. 
+
+## Test 2 - Invalid Pickup Times Are Rejected ## 
+Acceptance criteria 2: "Given the pickup window end is before its start, or the end is in the past, when I click "Post", then the listing is not saved and I see an error."
+
+Steps:
+1. Log in as vendor.
+2. Open new listing page
+3. Enter valid food details and title
+4. Set pickup starrt to tomorrow at 1 PM
+5. Set pickup end to tomorrow at noon.
+6. Click Post and record errors
+7. Try another listing with new title
+8. Set pickup start to yesterday at noon
+9. Set pickup end to yesterday at 1 PM
+10. Click Post and record errors.
+11. Check PostgreSQL for the attempted listings
+
+Expected Results:
+Both submissions display an error that prevents the listing from being posted. 
+
+Actual Result: 
+Correct error flags were given when attempting to give invalid end and start times. Listings were not saved as confirmed by PostgreSQL.
+
+## Test 3 - Student Opening Posting Page ##
+Acceptance Criteria 3: "Given I am logged in as a student, when I try to open the new-listing page, then access is denied."
+
+Steps:
+1. Log in as a vendor and copy listing page's URL.
+2. Make sure to log out.
+3. Log in as a student.
+4. Paste the URL into the browser and open
+
+Expected result:
+Access is denied
+
+Actual result: Access is denied by page, and correct error flag is shown. "You are not allowed to create a listing". Works as intended!
+
 # Manual Tests
 
 Run every test against the Docker Compose app (`docker compose up --build`,
