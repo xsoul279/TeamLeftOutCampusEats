@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Vendor Home</h1>
+
+<p>
+    <a href="{{ url_for('listings.new_listing') }}">
+        Post a food listing
+    </a>
+</p>
+
+<a href="{{ url_for('auth.logout') }}">Logout</a>
+{% endblock %}

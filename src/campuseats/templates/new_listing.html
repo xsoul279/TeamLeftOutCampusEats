@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Post a Listing | CampusEats{% endblock %}
+
+{% block content %}
+<h1>Post a Food Listing</h1>
+
+<form method="post">
+    <p>
+        <label for="title">Title</label><br>
+        <input id="title" name="title" maxlength="120" required
+               value="{{ request.form.get('title', '') }}">
+    </p>
+
+    <p>
+        <label for="description">Description</label><br>
+        <textarea id="description" name="description" required>{{ request.form.get('description', '') }}</textarea>
+    </p>
+
+    <p>
+        <label for="portions">Number of portions</label><br>
+        <input id="portions" name="portions" type="number"
+               min="1" max="100" step="1" required
+               value="{{ request.form.get('portions', '') }}">
+    </p>
+
+    <p>
+        <label for="pickup_location">Pickup location</label><br>
+        <input id="pickup_location" name="pickup_location"
+               maxlength="120" required
+               value="{{ request.form.get('pickup_location', '') }}">
+    </p>
+
+    <fieldset>
+        <legend>Dietary tags (optional)</legend>
+        {% for tag in dietary_tags %}
+        <label>
+            <input type="checkbox" name="tags" value="{{ tag.name }}"
+                   {% if tag.name in request.form.getlist('tags') %}checked{% endif %}>
+            {{ tag.value }}
+        </label><br>
+        {% endfor %}
+    </fieldset>
+
+    <p>
+        <label for="pickup_start">Pickup start</label><br>
+        <input id="pickup_start" name="pickup_start"
+               type="datetime-local" required
+               value="{{ request.form.get('pickup_start', '') }}">
+    </p>
+
+    <p>
+        <label for="pickup_end">Pickup end</label><br>
+        <input id="pickup_end" name="pickup_end"
+               type="datetime-local" required
+               value="{{ request.form.get('pickup_end', '') }}">
+    </p>
+
+    <button type="submit">Post</button>
+</form>
+{% endblock %}
