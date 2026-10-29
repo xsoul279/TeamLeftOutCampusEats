@@ -9,7 +9,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-
 from .extensions import db, login_manager
 
 
@@ -39,22 +38,35 @@ class ReservationStatus(enum.Enum):
     NO_SHOW = "No-show"
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     """A student or vendor account (US1)."""
 
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(100, unique=True))
+    username: Mapped[str] = mapped_column(String(100), unique=True)
     email: Mapped[str] = mapped_column(String(255), unique=True)
     password_hash: Mapped[str] = mapped_column(String(255))
-    role: Mapped[str] = mapped_column(String(10), default="student"))
+    role: Mapped[str] = mapped_column(String(10), default="student")
     creation_date: Mapped[datetime] = mapped_column(default=datetime.now)
     active: Mapped[bool] = mapped_column(default=True)
 
-    listings: Mapped[list["Listing"]] = relationship(back_populates="vendor")
-    reservations: Mapped[list["Reservation"]] = relationship(back_populates="student")
+    listings: Mapped[list["Listing"]] = relationship(
+        back_populates="vendor"
+    )
+    reservations: Mapped[list["Reservation"]] = relationship(
+        back_populates="student"
+    )
 
+    @property
+    def is_active(self):
+        return self.active
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 def _all_portions(context) -> int:
     """A new listing starts with every portion still available."""
@@ -133,9 +145,9 @@ class Reservation(db.Model):
     student: Mapped[User] = relationship(back_populates="reservations")
     listing: Mapped[Listing] = relationship(back_populates="reservations")
       
-    @login_manager.user_loader
-    def load_user(user_id):
-      try:
-        return db.session.get(User, int(user_id))
-      except (TypeError, ValueError):
-        return None
+@login_manager.user_loader
+def load_user(user_id):
+  try:
+    return db.session.get(User, int(user_id))
+  except (TypeError, ValueError):
+    return None

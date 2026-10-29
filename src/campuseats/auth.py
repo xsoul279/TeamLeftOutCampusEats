@@ -4,11 +4,14 @@ from sqlalchemy.exc import IntegrityError
 from .extensions import db
 from .models import User
 
-auth_bp = Blueprint("auth", __name__, template_folder="templates", static_folder="static")
+auth_bp = Blueprint("auth", __name__, template_folder="templates")
 
 @auth_bp.route("/register", methods=["GET", "POST"])
-
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for("auth.home"))
+
+
     if request.method == "POST":
         name = request.form.get("username", "").strip()
         email = request.form.get("email", "").strip().lower()
@@ -19,6 +22,8 @@ def register():
     
         if not name:
             errors.append("Username is required.")
+        elif len(name) > 100:
+            errors.append("Username should be 100 characters or less.")
         if not email:
             errors.append("Email is required.")
         if not password:
@@ -30,13 +35,13 @@ def register():
 
         if not errors and User.query.filter_by(email=email).first():
             errors.append("Email is already registered.")
+        if not errors and User.query.filter_by(username=name).first():
+            errors.append("Username is already taken.")
         
-
-
         if errors:
             for error in errors:
                 flash(error, "warning")
-            return render_template("register.html"), 400
+            return render_template("register.html", username=name, email=email, role=role), 400
 
 
         new_user = User(username=name, email=email, role=role)
@@ -46,8 +51,9 @@ def register():
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            flash("That email is already registered.")
-            return render_template("register.html"), 400
+            flash("That email or username is already registered.", "warning")
+            return render_template("register.html", username=name, email=email, role=role), 400
+        flash("Account creation successful! Please log in.", "success")
         return redirect(url_for("auth.login"))
     return render_template("register.html")
 
@@ -61,7 +67,7 @@ def login():
             login_user(user)
             return redirect(url_for("auth.home"))
         flash("Invalid email/password.", "warning")
-        return render_template("login.html"), 401
+        return render_template("login.html", email=email), 401
     return render_template("login.html")
 
 
@@ -71,7 +77,7 @@ def home():
     page = "vendor_home.html" if current_user.role == "vendor" else "student_home.html"
     return render_template(page)
 
-@ auth_bp.route("/logout")
+@auth_bp.route("/logout")
 @login_required
 def logout():
     logout_user()
