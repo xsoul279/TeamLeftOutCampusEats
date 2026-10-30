@@ -45,8 +45,8 @@ def login(driver, user):
     driver.find_element(By.NAME, "password").send_keys(user["password"])
     driver.find_element(By.CSS_SELECTOR, "button[type=submit]").click()
 
-@pytest.mark.parametrize("role", ["student", "vendor"])
-def test_register_and_login(driver, role):
+@pytest.mark.parametrize("role, home_url", [("student", "/student/home"), ("vendor", "/vendor/home"),])
+def test_register_and_login(driver, role, home_url):
     user = new_user(role)
     wait = WebDriverWait(driver, 5)
 
@@ -54,7 +54,7 @@ def test_register_and_login(driver, role):
     wait.until(EC.url_contains("/login"))
 
     login(driver, user)
-    wait.until(EC.url_contains("/home"))
+    wait.until(EC.url_contains(home_url))
 
 
 
