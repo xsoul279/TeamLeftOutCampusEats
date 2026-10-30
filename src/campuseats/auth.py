@@ -11,6 +11,7 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for("auth.home"))
 
+
     if request.method == "POST":
         name = request.form.get("username", "").strip()
         email = request.form.get("email", "").strip().lower()
@@ -42,6 +43,7 @@ def register():
                 flash(error, "warning")
             return render_template("register.html", username=name, email=email, role=role), 400
 
+
         new_user = User(username=name, email=email, role=role)
         new_user.set_password(password)
         db.session.add(new_user)
@@ -67,6 +69,7 @@ def login():
         flash("Invalid email/password.", "warning")
         return render_template("login.html", email=email), 401
     return render_template("login.html")
+
 
 @auth_bp.route("/home")
 @login_required

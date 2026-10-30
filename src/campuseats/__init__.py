@@ -11,6 +11,9 @@ from .extensions import db, login_manager
 from . import models  # noqa: F401  (registers the tables with db)
 from .main import bp
 from .auth import auth_bp
+from .listings import listings_bp
+
+   
 
    
 
@@ -29,6 +32,7 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     login_manager.init_app(app)
     app.register_blueprint(bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(listings_bp)
 
     # Plain `flask run` has no database, so only connect when one is configured.
     if app.config["SQLALCHEMY_DATABASE_URI"]:
@@ -39,6 +43,7 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
             
             seed_database()
         
+
 
             
     return app
