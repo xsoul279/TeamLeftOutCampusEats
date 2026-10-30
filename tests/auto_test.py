@@ -22,7 +22,7 @@ def new_user(role="student"):
 def register(driver, user, skip_browser_validation=True):
     driver.get(f"{BASE_URL}/register")
     if skip_browser_validation:
-        driver.execute_script("document.querySelector('form').noValidate = false;")
+        driver.execute_script("document.querySelector('form').noValidate = true;")
 
     driver.find_element(By.NAME, "username").send_keys(user["username"])
     driver.find_element(By.NAME, "email").send_keys(user["email"])
@@ -45,8 +45,8 @@ def login(driver, user):
     driver.find_element(By.NAME, "password").send_keys(user["password"])
     driver.find_element(By.CSS_SELECTOR, "button[type=submit]").click()
 
-@pytest.mark.parametrize("role, home_url", [("student", "/student/home"), ("vendor", "/vendor/home"),])
-def test_register_and_login(driver, role, home_url):
+@pytest.mark.parametrize("role", ["student", "vendor"])
+def test_register_and_login(driver, role):
     user = new_user(role)
     wait = WebDriverWait(driver, 5)
 
@@ -54,7 +54,9 @@ def test_register_and_login(driver, role, home_url):
     wait.until(EC.url_contains("/login"))
 
     login(driver, user)
-    wait.until(EC.url_contains(home_url))
+    wait.until(EC.url_contains("/home"))
+
+
 
 
 

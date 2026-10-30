@@ -1,4 +1,4 @@
-SEED
+from sqlalchemy.exc import IntegrityError
 from .extensions import db
 from .models import User
 
@@ -12,4 +12,7 @@ def seed_database():
     student.set_password("luckisAskill2")
     db.session.add(vendor)
     db.session.add(student)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
