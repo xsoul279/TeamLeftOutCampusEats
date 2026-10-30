@@ -22,7 +22,7 @@ def new_user(role="student"):
 def register(driver, user, skip_browser_validation=True):
     driver.get(f"{BASE_URL}/register")
     if skip_browser_validation:
-        driver.execute_script("document.querySelector('form').noValidate = true;")
+        driver.execute_script("document.querySelector('form').noValidate = false;")
 
     driver.find_element(By.NAME, "username").send_keys(user["username"])
     driver.find_element(By.NAME, "email").send_keys(user["email"])
