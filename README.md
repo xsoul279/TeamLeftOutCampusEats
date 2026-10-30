@@ -64,6 +64,53 @@ image tags and digests together when upgrading the runtime or PostgreSQL.
 Flask management commands use the same database configuration; for example,
 `docker compose exec web flask routes` lists the current application routes.
 
+## Seed accounts and sample listings
+
+On the first start, the app creates these demo accounts automatically. Open
+http://127.0.0.1:5000/login and use the email and password below:
+
+| Role | Name | Email | Password |
+| --- | --- | --- | --- |
+| Vendor | Flat Top Grill | `flattopgrill@msudenver.edu` | `grilled_cheese8` |
+| Student | Lucky Guy | `identityv@msudenver.edu` | `luckisAskill2` |
+
+Each login opens the home page for its role. The vendor can follow **Post a
+Listing** to create more food listings. Student browsing is subsequent work.
+
+The vendor starts with three sample listings: Vegetarian grain bowls (8
+portions), Vegan lentil soup (6), and Bakery bags (5). They include locations,
+zero or more dietary tags, and pickup windows starting 30-60 minutes after
+initialization and ending 4-6 hours after initialization, in America/Denver time.
+No manual registration or SQL is required.
+
+Schema creation and seeding run before Gunicorn starts its workers. The
+`seed_runs` table records completion of the dataset in the same transaction as
+the demo data. Repeated starts and `docker compose exec web flask seed` preserve
+existing passwords, edits, reservations, and portion counts. During initial
+setup, missing demo accounts are added even if other accounts already exist;
+an existing matching
+email is reused without resetting its password. A name/email collision or a
+conflicting role stops initialization without committing partial demo data.
+
+Sample pickup times are not moved forward on restart. To check a completely
+fresh dataset, use a separate disposable Compose project on an unused port:
+
+```bash
+WEB_PORT=5001 docker compose -p campuseats-demo-check up --build
+```
+
+For PowerShell, set `$env:WEB_PORT = "5001"` before the Compose command. Log in as
+both roles, then stop that test project and reset **only its disposable data**:
+
+```bash
+docker compose -p campuseats-demo-check down -v
+```
+
+Running the first command again recreates the demo accounts and future pickup
+windows. Ordinary `docker compose down` preserves data. Do not use `down -v` on
+a project whose data you want to retain. A fresh volume also restores the listed
+demo passwords; preserved accounts keep any password changes.
+
 # Local Development
 
 Requires Python 3.10 or newer. From the repository root:
@@ -82,14 +129,24 @@ use http://127.0.0.1:5000 to reach the Flask server directly.
 If port 5000 is occupied, use `flask run --port 5001` and open
 http://localhost:5001 instead.
 
-The current platform provides the home page, shared navigation, and a Docker
-Compose deployment with PostgreSQL. Application models, automatic schema setup,
-seed accounts, and the user stories are subsequent work.
+The app provides shared navigation, role-based registration and login, vendor
+listing creation, and a Docker Compose deployment with PostgreSQL and demo data.
+Plain `flask run` has no database by default; use Docker Compose for the complete
+setup. If running Flask separately, supply a PostgreSQL `DATABASE_URL` reachable
+from that process and a stable `SECRET_KEY`.
+
+The web entrypoint creates missing tables on startup. It does not migrate
+existing tables after model changes. Use a fresh disposable project for schema
+checks; preserve working data and use a migration when its schema must change.
 
 ## Application Structure
 
 - `src/campuseats/__init__.py`: `create_app` factory and blueprint registration.
 - `src/campuseats/main.py`: public home page at `/` (`main.index`).
+- `src/campuseats/extensions.py`: shared `db` (Flask-SQLAlchemy) object.
+- `src/campuseats/models.py`: `User`, `Listing`, `Reservation`, and the `Role`,
+  `DietaryTag`, and `ReservationStatus` enums, matching `uml/class.wsd`.
+- `src/campuseats/seed.py`: one-time demo accounts, sample listings, and seed history.
 - `src/campuseats/templates/base.html`: shared layout, navigation, and flash messages.
 - `src/campuseats/templates/index.html`: home page extending the shared layout.
 - `src/campuseats/static/css/site.css`: responsive styles served locally.
@@ -111,7 +168,7 @@ Each team designates one member as the **Scrum Master** before Sprint 1 begins a
 The Product Owner role is played by the instructor. The instructor has written the backlog and set the user value of each story; your team decides effort, priority within the rules below, and how the work is split.
 
 ```
-Scrum Master: <student's name>
+Scrum Master: Soul Martin (xsoul279)
 ```
 
 # Project Vision
@@ -213,17 +270,17 @@ Before Sprint 1 starts, your team estimates every story and ranks the backlog us
 
 | ID | Short name | User value | Story points | Priority score | Rank |
 | --- | --- | --- | --- | --- | --- |
-| US1 | Register and log in | 3 |  |  |  |
-| US2 | Post a listing | 3 |  |  |  |
-| US3 | Browse listings | 3 |  |  |  |
-| US4 | Reserve portions | 3 |  |  |  |
-| US5 | Manage listings | 2 |  |  |  |
-| US6 | My reservations | 2 |  |  |  |
-| US7 | Confirm pickup | 3 |  |  |  |
-| US8 | Filter listings | 2 |  |  |  |
-| US9 | Impact dashboard | 1 |  |  |  |
-| US10 | Rate a pickup | 1 |  |  |  |
-| **Total** |  |  |  |  |  |
+| US1 | Register and log in | 3 | 5 | 0.60 | 6 |
+| US2 | Post a listing | 3 | 3 | 1.00 | 2 |
+| US3 | Browse listings | 3 | 2 | 1.50 | 1 |
+| US4 | Reserve portions | 3 | 5 | 0.60 | 7 |
+| US5 | Manage listings | 2 | 5 | 0.40 | 8 |
+| US6 | My reservations | 2 | 3 | 0.67 | 5 |
+| US7 | Confirm pickup | 3 | 3 | 1.00 | 3 |
+| US8 | Filter listings | 2 | 2 | 1.00 | 4 |
+| US9 | Impact dashboard | 1 | 3 | 0.33 | 9 |
+| US10 | Rate a pickup | 1 | 3 | 0.33 | 10 |
+| **Total** |  | 23 | 34 |  |  |
 
 Priority Score Formula: 
 
@@ -242,17 +299,21 @@ Before writing any code, split the backlog across the three sprints and record i
 * Planned burndown: list the story points remaining at the start and after each planned sprint.
 
 ```
-Team capacity (story points per sprint): <your team's capacity>
+Team capacity (story points per sprint): 11
 
-Justification (one or two sentences: team size, hours available, course load): <justification>
+Justification (one or two sentences: team size, hours available, course load):
+We have 4 members who can each give about 9 to 10 hours per sprint alongside other courses,
+and our sprints are 5 to 6 days long to finish by Nov 8, so we plan about 11 story points per sprint.
 ```
 
 | Sprint | User stories (in order) | Story points planned | Points remaining after sprint | Dependencies checked (Y/N) |
 | --- | --- | --- | --- | --- |
-| Sprint 1 |  |  |  |  |
-| Sprint 2 |  |  |  |  |
-| Sprint 3 |  |  |  |  |
-| **Total** |  |  | — | — |
+| Sprint 1 | US1 → US2 | 8 | 20 | Y |
+| Sprint 2 | US3 → US4, US8 | 9 | 11 | Y |
+| Sprint 3 | US5, US6, US7 | 11 | 0 | Y |
+| **Total** | US1 to US8 (US9 and US10 not planned) | 28 | — | — |
+
+Planned burndown (story points remaining): start 28 → after Sprint 1: 20 → after Sprint 2: 11 → after Sprint 3: 0
 
 # Sprint Boards
 
