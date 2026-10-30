@@ -1,3 +1,30 @@
+# US1 and US2 release re-test - 2026-10-30
+
+Tested by Rinkatur5 against merged `dev` commit
+`78c82dfbb3bd15eb7274eb604d11d95f77bed098` after PR #53. The fresh Docker Compose
+project `campuseats-a20-check` used PostgreSQL and port 15020 with its own
+disposable volume. Forms were exercised through the browser; PostgreSQL was
+inspected read-only to verify persistence and password hashing. No application
+code was changed for this re-test.
+
+| User story | Acceptance criterion | Tester | Date | Result | Notes |
+| --- | --- | --- | --- | --- | --- |
+| US1 | 1: register either role and redirect to login | Rinkatur5 | 10/30/26 | passed | New student and vendor with unique emails and an 8-character password both reached login; both rows persisted with the selected role. |
+| US1 | 2: reject duplicate email | Rinkatur5 | 10/30/26 | passed | Reused the student's email in uppercase with a different name; duplicate error displayed and user count stayed unchanged. |
+| US1 | 3: reject and identify empty required fields | Rinkatur5 | 10/30/26 | passed | Tested name, email, password, role, and all fields empty; each missing field was identified and no account was added. A 7-character password was also rejected. |
+| US1 | 4: store hashed passwords | Rinkatur5 | 10/30/26 | passed | Both newly registered passwords were stored as scrypt hashes, distinct from the submitted password; hashes were not copied into this report. |
+| US1 | 5: correct role home; wrong password stays logged out | Rinkatur5 | 10/30/26 | passed | Wrong password showed an error on login; correct credentials opened Student Home and Vendor Home respectively. |
+| US2 | 1: store a vendor-owned listing with its fields and tags | Rinkatur5 | 10/30/26 | passed | Posted listings with zero, multiple, and all five allowed tags, including 1 and 100 portions. PostgreSQL confirmed all fields, remaining counts, and the posting vendor ID. |
+| US2 | 2: reject reversed or past-ended pickup windows | Rinkatur5 | 10/30/26 | passed | Each invalid window displayed the relevant error; neither attempted listing was stored. |
+| US2 | 3: deny student access to posting page | Rinkatur5 | 10/30/26 | passed | Logged in as a student and opened the recorded `/listings/new` URL directly; received the 403 Forbidden page. |
+
+All eight acceptance rows passed on the integrated Sprint 1 application. This
+records the story re-test; design, Scrum evidence, release review, and the `v1`
+tag remain separate release requirements. Earlier runs and later-story case
+specifications are retained below.
+
+## Previous runs and other story specifications
+
 | User story | Acceptance criterion | Tester | Date | Result | Notes |
 | --- | --- | --- | --- | --- | --- |
 | US1 | 1: When on the registration page, entering a name, unique email, password of at least 8 characters, and selecting a valid role ('vendor', or 'student') will store my account in PostgreSQL and I am then redirected to the login page. | Caine | 10/27/26 | passed | fixed error where username wasn't being passed - mismatch in the templates. Fixed and registering is now working |
