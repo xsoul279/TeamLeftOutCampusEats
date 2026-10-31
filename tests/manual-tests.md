@@ -92,6 +92,12 @@ update the Date and Result columns.
 | US4 | 2: more portions than remain rejected | | | | |
 | US4 | 3: second reservation on same listing rejected | | | | |
 | US4 | 4: last portion, only one student wins | | | | |
+| US7 | 1: in-window code marks picked up, shows student and portions | | | | |
+| US7 | 2a: unknown code rejected | | | | |
+| US7 | 2b: another vendor's code rejected | | | | |
+| US7 | 2c: already-used code rejected | | | | |
+| US7 | 2d: cancelled code rejected | | | | |
+| US7 | 3: ended window shows active reservations as no-show | | | | |
 
 ## Test cases
 
@@ -120,3 +126,26 @@ account.
 | 2 | Pick a listing with exactly 1 portion remaining. Try to reserve 2. | An error says there aren't enough portions. No reservation is created and portions remaining is still 1. |
 | 3 | Reserve 1 portion from a listing. Then try to reserve from the same listing again. | A message says you already have a reservation for this listing. No second reservation is created. |
 | 4 | Pick a listing with exactly 1 portion remaining. Open the app in a normal window and a private window, logged in as two different students. Open the reserve form for that listing in both, then click Reserve in both as close together as you can. | Exactly one window gets a pickup code. The other gets an error. Portions remaining is 0, not -1. |
+
+### US7: Confirm pickup
+
+Uses the extra seed data (#56): vendors Flat Top Grill and Campus Cafe, and
+Lucky Guy's reservations on `[Demo] Sold-out soup` (active, 2 portions, window
+open), `[Demo] Cancelled bakery bags` (cancelled), and `[Demo] Ended vegetarian
+tray` (active, window ended). Start from fresh data (`docker compose down -v`,
+then `docker compose up --build`) and run AC 1 within 4 hours: the soup's pickup
+window ends 4 hours after startup. Pickup codes are random; look them up with:
+
+`docker compose exec db psql -U campuseats -d campuseats -c "SELECT l.title, u.username AS vendor, r.pickup_code, r.portions, r.status FROM reservations r JOIN listings l ON l.id = r.listing_id JOIN users u ON u.id = l.vendor_id ORDER BY l.title"`
+
+Run the rows in this order: 2a, 2b, 1, 2c, 2d, 3 (2b needs the soup code still
+active; 2c needs it already used).
+
+| AC | What to do | What should happen |
+| --- | --- | --- |
+| 2a | Log in as Flat Top Grill. On the Confirm pickup page, enter `ZZZZZZ` (not in the query output). | Rejected with a message that the code was not found. No reservation changes. |
+| 2b | Log out. Log in as Campus Cafe and enter the `[Demo] Sold-out soup` code. | Rejected with a message that the code isn't for one of your listings. The soup reservation is still `ACTIVE`. |
+| 1 | Log out. Log in as Flat Top Grill and enter the `[Demo] Sold-out soup` code. | The page shows Lucky Guy and 2 portions to hand out. The query shows the reservation as `PICKED_UP`. |
+| 2c | Enter the same soup code again. | Rejected with a message that the code was already used. Status stays `PICKED_UP`. |
+| 2d | Enter the `[Demo] Cancelled bakery bags` code. | Rejected with a message that the reservation was cancelled. Status stays `CANCELLED`. |
+| 3 | Open the reservations for `[Demo] Ended vegetarian tray` (its pickup window has ended). | Lucky Guy's reservation is shown with status "No-show". |
