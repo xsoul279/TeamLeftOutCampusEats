@@ -19,3 +19,21 @@ own disposable volume. The normal development project's data was not reset.
 The README setup and credentials were verified by the author. Issue #6's
 independent teammate walkthrough remains part of PR review. These checks do not
 replace the separate story acceptance results in `tests/manual-tests.md`.
+
+## Extra seed fixtures - 2026-10-30
+
+Tested by Rinkatur5 for issue #18 in the isolated `campuseats-a18-check` Docker
+project (port 15018), followed by an upgrade of the disposable #20 database.
+
+| Check | Result |
+| --- | --- |
+| Fresh startup | Passed: 3 users, 7 listings, 3 fixture reservations, and 2 completed dataset records. The ended, cancelled, and sold-out fixtures and the second vendor's available listing are present. |
+| Fixture integrity | Passed: reservation states and portion arithmetic match each listing; all 3 pickup codes are unique and 6 characters long. The sold-out pickup window is currently open. |
+| Second vendor login | Passed in the browser: the documented Campus Cafe credentials reach Vendor Home. |
+| Upgrade from Sprint 1 data | Passed: all 4 existing user rows and all 6 existing listing rows from the #20 deployment retained their IDs, fields, password fingerprints, portion counts, and pickup times. Exactly 1 vendor and 4 fixtures were added. |
+| Repeated seed and restart | Passed: row counts stay unchanged, and a changed second-vendor password and edited fixture title persist without recreating the original fixture. |
+
+Historical fixtures intentionally bypass new-listing time rules during seeding;
+the posting form and story behavior were not changed. Each dataset is applied
+once, so fixture windows are not refreshed on restart. No working database was
+reset for these checks.
