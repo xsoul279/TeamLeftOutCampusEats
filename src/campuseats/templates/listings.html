@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Available Listings | CampusEats{% endblock %}
+
+{% block content %}
+<h1>Available Listings</h1>
+
+{% if listings %}
+<ul class="steps">
+    {% for listing in listings %}
+    <li class="step">
+        <h3>{{ listing.title }}</h3>
+        <p>{{ listing.description }}</p>
+         <p><strong>Vendor:</strong> {{ listing.vendor.username }}</p>
+         <p><strong>Pickup Location:</strong> {{ listing.pickup_location }}</p>
+         <p><strong>Portions Remaining:</strong> {{ listing.portions_remaining }}</p>
+         <p><strong>Pickup window:</strong> {{ listing.pickup_start.strftime("%m/%d/%Y %I:%M %p") }} to {{ listing.pickup_end.strftime("%m/%d/%Y %I:%M %p") }}</p>
+         <p><strong>Dietary Tags:</strong> {{ listing.tags | map(attribute="value") | join(", ") or "None" }}</p>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No listings are available right now.</p>
+{% endif %}
+{% endblock %}
