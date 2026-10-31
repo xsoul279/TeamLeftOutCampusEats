@@ -51,18 +51,6 @@ Participants: Ethan Sroka, Soul Martin, Jose Torres, Caine Mayhew
 **What's Done**: Class diagram is merged
 **What's Next**: Finish and review merge work for models and test cases
 
-# 99/99/99-99:99
-
-Participants: 
-
-Notes...
-
-# 99/99/99-99:99
-
-Participants: 
-
-Notes...
-
 # 10/27/26
 
 Participants: Ethan, Soul, Caine, Jose, Pete
@@ -84,7 +72,7 @@ To Do:
 Blockers:
 - Conflicts found within the database model integration. US2 implementation and testing blocked.
 
-10/28/26
+# 10/28/26
 
 Participants: Ethan, Soul, Caine, Jose, Pete
 
