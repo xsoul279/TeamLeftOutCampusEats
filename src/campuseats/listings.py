@@ -6,11 +6,31 @@ from flask import (
 )
 from flask_login import current_user, login_required
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import select
 
 from .extensions import db
 from .models import DietaryTag, Listing
 
 listings_bp = Blueprint("listings", __name__)
+
+@listings_bp.get("/listings")
+@login_required
+def browse_listings():
+    if current_user.role != "student":
+        abort(403, description="Only students can browse listings.")
+
+    now = datetime.now(ZoneInfo("America/Denver")).replace(tzinfo=None)
+    listings = db.session.scalars(
+        select(Listing)
+        .where(
+            Listing.cancelled.is_(False),
+            Listing.pickup_end > now,
+            Listing.portions_remaining > 0
+        )
+        .order_by(Listing.pickup_end)
+    ).all()
+
+    return render_template("listings.html", listings=listings)
 
 @listings_bp.route("/listings/new", methods=["GET", "POST"])
 @login_required
