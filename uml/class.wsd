@@ -85,4 +85,14 @@ note bottom of Reservation
   reservation per listing (US4 AC 3).
 end note
 
+class SeedRun <<bootstrap>> {
+    name : str {primary key}
+    created_at : datetime
+}
+
+note bottom of SeedRun
+  Records completed demo datasets.
+  No association with application records.
+end note
+
 @enduml

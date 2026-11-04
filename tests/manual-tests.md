@@ -1,17 +1,37 @@
+# US1 and US2 release re-test - 2026-10-30
+
+Tested by Rinkatur5 against merged `dev` commit
+`78c82dfbb3bd15eb7274eb604d11d95f77bed098` after PR #53. The fresh Docker Compose
+project `campuseats-a20-check` used PostgreSQL and port 15020 with its own
+disposable volume. Forms were exercised through the browser; PostgreSQL was
+inspected read-only to verify persistence and password hashing. No application
+code was changed for this re-test.
+
+| User story | Acceptance criterion | Tester | Date | Result | Notes |
+| --- | --- | --- | --- | --- | --- |
+| US1 | 1: register either role and redirect to login | Rinkatur5 | 10/30/26 | passed | New student and vendor with unique emails and an 8-character password both reached login; both rows persisted with the selected role. |
+| US1 | 2: reject duplicate email | Rinkatur5 | 10/30/26 | passed | Reused the student's email in uppercase with a different name; duplicate error displayed and user count stayed unchanged. |
+| US1 | 3: reject and identify empty required fields | Rinkatur5 | 10/30/26 | passed | Tested name, email, password, role, and all fields empty; each missing field was identified and no account was added. A 7-character password was also rejected. |
+| US1 | 4: store hashed passwords | Rinkatur5 | 10/30/26 | passed | Both newly registered passwords were stored as scrypt hashes, distinct from the submitted password; hashes were not copied into this report. |
+| US1 | 5: correct role home; wrong password stays logged out | Rinkatur5 | 10/30/26 | passed | Wrong password showed an error on login; correct credentials opened Student Home and Vendor Home respectively. |
+| US2 | 1: store a vendor-owned listing with its fields and tags | Rinkatur5 | 10/30/26 | passed | Posted listings with zero, multiple, and all five allowed tags, including 1 and 100 portions. PostgreSQL confirmed all fields, remaining counts, and the posting vendor ID. |
+| US2 | 2: reject reversed or past-ended pickup windows | Rinkatur5 | 10/30/26 | passed | Each invalid window displayed the relevant error; neither attempted listing was stored. |
+| US2 | 3: deny student access to posting page | Rinkatur5 | 10/30/26 | passed | Logged in as a student and opened the recorded `/listings/new` URL directly; received the 403 Forbidden page. |
+
+All eight acceptance rows passed on the integrated Sprint 1 application. This
+records the story re-test; design, Scrum evidence, release review, and the `v1`
+tag remain separate release requirements. Earlier runs and later-story case
+specifications are retained below.
+
+## Previous runs and other story specifications
+
 | User story | Acceptance criterion | Tester | Date | Result | Notes |
 | --- | --- | --- | --- | --- | --- |
 | US1 | 1: When on the registration page, entering a name, unique email, password of at least 8 characters, and selecting a valid role ('vendor', or 'student') will store my account in PostgreSQL and I am then redirected to the login page. | Caine | 10/27/26 | passed | fixed error where username wasn't being passed - mismatch in the templates. Fixed and registering is now working |
 | US1 | 2: A duplicated email is rejected and an error message is shown | Caine | 10/27/26 | passed | duplicate email is rejected and the message "Email is already registered" is displayed. |
 | US1 | 3: Account is not created if a required field is empty and the empty field is identified | Caine | 10/27/26 | passed | tested for each field and all of them at once - all properly display error messages individually and when all are blank, displays all error messages for every field. |
-| US1 | 4: Passwords are stored hashed, not in plain text | Caine | 10/27/26 | passed | checked that passwords are properly hashed - will attach below |
+| US1 | 4: Passwords are stored hashed, not in plain text | Caine | 10/27/26 | passed | checked in PostgreSQL that passwords are stored as scrypt hashes, not plain text |
 | US1 | 5: If an account exists and the correct user/pass are entered, user is redirected to the home page for selected role. If wrong pass, an error message is displayed | Caine | 10/27/26 | passed | tested for email/pass error message works. Tested directly after registering, everything correctly saved. |
-
-
-id |    username    |           email            |  role   | password_hash |
-| --- | --- | --- | --- | --- |
-| 1 | Flat Top Grill | flattopgrill@msudenver.edu | vendor  | scrypt:32768:8:1$PUs4wq9KwXAE7BqZ$7fbbf0b3ea8ccb680a45943aab14d6414cfc567eee76ce4de27f2ae8153bdce1fba9c5dbb51408920af5e777f8dcab5bf1ef497fd0eee19abe0d242ee6660a28 
-| 2 | Lucky Guy   | identityv@msudenver.edu    | student | scrypt:32768:8:1$iJzlcitFV5K9aEld$e9314e7b90e76e062635a273136e3fe903d3bf3b0a96f73def8bad31da5a8187a033b39151c19578773438381036a10e14590d1d2faf8de0aecce65e462dad76 
-| 3 | Caine    | luciferseve@gmail.com      | student | scrypt:32768:8:1$RIl5aGONMllGf88B$81e73e174bc2cb854a98391883578bc189e597410e963e36758576e8726215869301a8eec9ccfe8923996a4c301b2966607891b4aca62a53c06fcd05eab27acc
 
 ## US2 Manual test cases ##
 

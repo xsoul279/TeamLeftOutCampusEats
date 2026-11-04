@@ -28,7 +28,18 @@ removes that database volume and resets its contents.
 
 ## Container Configuration
 
-Compose reads these optional settings from the shell or an ignored `.env` file:
+Compose reads these optional settings from the shell or an ignored `.env` file.
+For a local configuration, copy `.env.example` to `.env` (`cp .env.example .env`
+on macOS/Linux, or `Copy-Item .env.example .env` in PowerShell). Replace the
+password and secret-key placeholders before starting Compose. The example
+includes a command to generate a random secret key; keep that key stable to
+preserve sessions across restarts. Keep `.env` private and commit only
+`.env.example`.
+
+Leave `DATABASE_URL` empty to use the Compose database settings. Change database
+credentials before the first start: PostgreSQL initializes them only when its
+data volume is empty. Editing `.env` later does not update an existing database
+user or its password.
 
 | Variable | Default / behavior |
 | --- | --- |
@@ -53,6 +64,53 @@ image tags and digests together when upgrading the runtime or PostgreSQL.
 Flask management commands use the same database configuration; for example,
 `docker compose exec web flask routes` lists the current application routes.
 
+## Seed accounts and sample listings
+
+On the first start, the app creates these demo accounts automatically. Open
+http://127.0.0.1:5000/login and use the email and password below:
+
+| Role | Name | Email | Password |
+| --- | --- | --- | --- |
+| Vendor | Flat Top Grill | `flattopgrill@msudenver.edu` | `grilled_cheese8` |
+| Student | Lucky Guy | `identityv@msudenver.edu` | `luckisAskill2` |
+
+Each login opens the home page for its role. The vendor can follow **Post a
+Listing** to create more food listings. Student browsing is subsequent work.
+
+The vendor starts with three sample listings: Vegetarian grain bowls (8
+portions), Vegan lentil soup (6), and Bakery bags (5). They include locations,
+zero or more dietary tags, and pickup windows starting 30-60 minutes after
+initialization and ending 4-6 hours after initialization, in America/Denver time.
+No manual registration or SQL is required.
+
+Schema creation and seeding run before Gunicorn starts its workers. The
+`seed_runs` table records completion of the dataset in the same transaction as
+the demo data. Repeated starts and `docker compose exec web flask seed` preserve
+existing passwords, edits, reservations, and portion counts. During initial
+setup, missing demo accounts are added even if other accounts already exist;
+an existing matching
+email is reused without resetting its password. A name/email collision or a
+conflicting role stops initialization without committing partial demo data.
+
+Sample pickup times are not moved forward on restart. To check a completely
+fresh dataset, use a separate disposable Compose project on an unused port:
+
+```bash
+WEB_PORT=5001 docker compose -p campuseats-demo-check up --build
+```
+
+For PowerShell, set `$env:WEB_PORT = "5001"` before the Compose command. Log in as
+both roles, then stop that test project and reset **only its disposable data**:
+
+```bash
+docker compose -p campuseats-demo-check down -v
+```
+
+Running the first command again recreates the demo accounts and future pickup
+windows. Ordinary `docker compose down` preserves data. Do not use `down -v` on
+a project whose data you want to retain. A fresh volume also restores the listed
+demo passwords; preserved accounts keep any password changes.
+
 # Local Development
 
 Requires Python 3.10 or newer. From the repository root:
@@ -71,14 +129,15 @@ use http://127.0.0.1:5000 to reach the Flask server directly.
 If port 5000 is occupied, use `flask run --port 5001` and open
 http://localhost:5001 instead.
 
-The current platform provides the home page, shared navigation, a Docker
-Compose deployment with PostgreSQL, and the database models. Seed accounts and
-the user stories are subsequent work. Plain `flask run` has no database, so use
-Docker Compose for anything that reads or writes data.
+The app provides shared navigation, role-based registration and login, vendor
+listing creation, and a Docker Compose deployment with PostgreSQL and demo data.
+Plain `flask run` has no database by default; use Docker Compose for the complete
+setup. If running Flask separately, supply a PostgreSQL `DATABASE_URL` reachable
+from that process and a stable `SECRET_KEY`.
 
-The web entrypoint creates any missing tables on startup. It does not change
-tables that already exist, so after editing a model run `docker compose down -v`
-and start again to rebuild the schema (this also deletes the stored data).
+The web entrypoint creates missing tables on startup. It does not migrate
+existing tables after model changes. Use a fresh disposable project for schema
+checks; preserve working data and use a migration when its schema must change.
 
 ## Application Structure
 
@@ -87,6 +146,7 @@ and start again to rebuild the schema (this also deletes the stored data).
 - `src/campuseats/extensions.py`: shared `db` (Flask-SQLAlchemy) object.
 - `src/campuseats/models.py`: `User`, `Listing`, `Reservation`, and the `Role`,
   `DietaryTag`, and `ReservationStatus` enums, matching `uml/class.wsd`.
+- `src/campuseats/seed.py`: one-time demo accounts, sample listings, and seed history.
 - `src/campuseats/templates/base.html`: shared layout, navigation, and flash messages.
 - `src/campuseats/templates/index.html`: home page extending the shared layout.
 - `src/campuseats/static/css/site.css`: responsive styles served locally.
@@ -288,19 +348,6 @@ The instructor must be able to run the app with a single command from the reposi
 
 ```
 docker compose up --build
-
-Seed accounts:
-
-Vendor:
-username = Flat Top Grill
-email = flattopgrill@msudenver.edu
-pass = grilled_cheese8
-
-Student:
-username = Lucky Guy
-email = identityv@msudenver.edu
-pass = luckisAskill2
-
 ```
 
 and then open it at http://localhost:5000. The README must list this command and include seed accounts (at least one vendor and one student with a few sample listings) created automatically on first start, so the app can be graded without manual data entry.

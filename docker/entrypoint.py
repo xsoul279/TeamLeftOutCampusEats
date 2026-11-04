@@ -10,6 +10,7 @@ import psycopg
 from campuseats import create_app
 from campuseats.config import database_url
 from campuseats.extensions import db
+from campuseats.seed import seed_database
 
 
 def configure_environment() -> str:
@@ -40,17 +41,18 @@ def wait_for_database(url: str) -> None:
             time.sleep(2)
 
 
-def create_tables() -> None:
-    """Create missing tables once, before the server workers start."""
+def initialize_database() -> None:
+    """Create missing tables and seed data before the server workers start."""
     with create_app().app_context():
         db.create_all()
+        seed_database()
 
 
 def main() -> None:
     if len(sys.argv) < 2:
         raise SystemExit("A server command is required.")
     wait_for_database(configure_environment())
-    create_tables()
+    initialize_database()
     os.execvp(sys.argv[1], sys.argv[1:])
 
 
