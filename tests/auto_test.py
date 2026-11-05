@@ -8,7 +8,7 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-BASE_URL = os.environ.get("BASE_URL", "https://localhost:5000")
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:5000")
 
 
 def new_user(role="student"):
@@ -39,7 +39,7 @@ def register(driver, user, skip_browser_validation=True):
     Select(driver.find_element(By.NAME, "role")).select_by_value(user["role"])
     driver.find_element(By.CSS_SELECTOR, "button[type=submit]").click()
 
-def duplicate_reject_login():
+def test_duplicate_reject_login(driver):
     user = new_user("student")
     wait = WebDriverWait(driver, 5)
 
@@ -49,7 +49,7 @@ def duplicate_reject_login():
     duplicate = {**user, "username": f"dup_{uuid.uuid4().hex[:8]}"}
     register(driver, duplicate)
     warning = wait.until(
-        EC.visibility_of_element_located((By.CSS_SELECTOR, ".messages .message[data-category='warning]"))
+        EC.visibility_of_element_located((By.CSS_SELECTOR, ".messages .message[data-category='warning']"))
     )
 
     assert warning.text == "Email is already registered."
