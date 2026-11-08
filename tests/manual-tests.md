@@ -113,6 +113,7 @@ update the Date and Result columns.
 | US4 | 3: second reservation on same listing rejected | | | | |
 | US4 | 4: last portion, only one student wins | | | | |
 | US7 | 1: in-window code marks picked up, shows student and portions | | | | |
+| US7 | 1b: code after the pickup window rejected | | | | |
 | US7 | 2a: unknown code rejected | | | | |
 | US7 | 2b: another vendor's code rejected | | | | |
 | US7 | 2c: already-used code rejected | | | | |
@@ -158,14 +159,15 @@ window ends 4 hours after startup. Pickup codes are random; look them up with:
 
 `docker compose exec db psql -U campuseats -d campuseats -c "SELECT l.title, u.username AS vendor, r.pickup_code, r.portions, r.status FROM reservations r JOIN listings l ON l.id = r.listing_id JOIN users u ON u.id = l.vendor_id ORDER BY l.title"`
 
-Run the rows in this order: 2a, 2b, 1, 2c, 2d, 3 (2b needs the soup code still
+Run the rows in this order: 2a, 2b, 1, 2c, 2d, 1b, 3 (2b needs the soup code still
 active; 2c needs it already used).
 
 | AC | What to do | What should happen |
 | --- | --- | --- |
-| 2a | Log in as Flat Top Grill. On the Confirm pickup page, enter `ZZZZZZ` (not in the query output). | Rejected with a message that the code was not found. No reservation changes. |
+| 2a | Log in as Flat Top Grill. Click **Confirm a pickup** on Vendor Home (`/pickups`) and enter `ZZZZZZ` (not in the query output). | Rejected with a message that the code was not found. No reservation changes. |
 | 2b | Log out. Log in as Campus Cafe and enter the `[Demo] Sold-out soup` code. | Rejected with a message that the code isn't for one of your listings. The soup reservation is still `ACTIVE`. |
 | 1 | Log out. Log in as Flat Top Grill and enter the `[Demo] Sold-out soup` code. | The page shows Lucky Guy and 2 portions to hand out. The query shows the reservation as `PICKED_UP`. |
 | 2c | Enter the same soup code again. | Rejected with a message that the code was already used. Status stays `PICKED_UP`. |
 | 2d | Enter the `[Demo] Cancelled bakery bags` code. | Rejected with a message that the reservation was cancelled. Status stays `CANCELLED`. |
-| 3 | Open the reservations for `[Demo] Ended vegetarian tray` (its pickup window has ended). | Lucky Guy's reservation is shown with status "No-show". |
+| 1b | Enter the `[Demo] Ended vegetarian tray` code. | Rejected with a message that the pickup window has ended. The reservation is not marked `PICKED_UP`. |
+| 3 | On the same page, look under **Reservations on your listings** for `[Demo] Ended vegetarian tray` (its pickup window has ended). | Lucky Guy's reservation is shown with status "No-show", and the query shows `NO_SHOW`. |
