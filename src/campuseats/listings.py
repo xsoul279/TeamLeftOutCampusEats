@@ -1,5 +1,6 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
+import secrets
 
 from flask import (
     Blueprint, abort, flash, redirect, render_template, request, url_for,
@@ -9,9 +10,20 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
 
 from .extensions import db
-from .models import DietaryTag, Listing
+from .models import DietaryTag, Listing, Reservation, ReservationStatus
 
 listings_bp = Blueprint("listings", __name__)
+
+def make_pickup_code():
+    char_bank = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    while True:
+        code = ""
+        for _ in range(6):
+            code += secrets.choice(char_bank)
+        # Find one reservation with this code. If none exist, return the code. Otherwise, generate a new one.
+        taken = db.session.scalar(select(Reservation).where(Reservation.pickup_code == code))
+        if not taken:
+            return code
 
 @listings_bp.get("/listings")
 @login_required
@@ -31,6 +43,71 @@ def browse_listings():
     ).all()
 
     return render_template("listings.html", listings=listings)
+
+@listings_bp.post("/listings/<int:listing_id>/reserve")
+@login_required
+def reserve_listing(listing_id):
+    # Check if the user is a student
+    if current_user.role != "student":
+        abort(403, description="Only students can reserve listings.")
+    # Lock the listing row for update to prevent multiple students from reserving the same portions simultaneously
+    listing = db.session.get(Listing, listing_id, with_for_update=True)
+    # Check if the listing exists
+    if not listing:
+        abort(404, description="Listing not found.")
+    now = datetime.now(ZoneInfo("America/Denver")).replace(tzinfo=None)
+    # Check if the listing is cancelled or the pickup end time has passed
+    if listing.cancelled or listing.pickup_end <= now:
+        flash("This listing is no longer available.", "error")
+        return redirect(url_for("listings.browse_listings"))
+    existing = db.session.scalar(select(Reservation).where(
+        Reservation.student_id == current_user.id,
+        Reservation.listing_id == listing.id,
+        Reservation.status == ReservationStatus.ACTIVE
+    ))
+    # Check if the student already has an active reservation for this listing
+    if existing:
+        flash("You already have a reservation for this listing.", "error")
+        return redirect(url_for("listings.browse_listings"))
+    # Check if the requested number of portions is valid and available
+    try:
+        portions = int(request.form.get("portions", ""))
+        if portions not in (1, 2):
+            raise ValueError
+        if portions > listing.portions_remaining:
+            flash("Not enough portions remaining to reserve.", "error")
+            return redirect(url_for("listings.browse_listings"))
+    except ValueError:
+        flash("Invalid number of portions requested.", "error")
+        return redirect(url_for("listings.browse_listings"))
+    # Update the listing's portions_remaining
+    listing.portions_remaining -= portions
+    # Create a new reservation for the student
+    reservation = Reservation(
+            student_id=current_user.id,
+            listing_id=listing.id,
+            portions = portions,
+            pickup_code=make_pickup_code()
+        )
+    # Add the reservation to the database and commit the changes
+    db.session.add(reservation)
+    
+    try:
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        flash("Something went wrong reserving this listing. Please try again.", "error")
+        return redirect(url_for("listings.browse_listings"))
+
+    return redirect(url_for("listings.reservation_confirmed", reservation_id=reservation.id))
+
+@listings_bp.get("/reservations/<int:reservation_id>")
+@login_required
+def reservation_confirmed(reservation_id):
+    reservation = db.session.get(Reservation, reservation_id)
+    if not reservation or reservation.student_id != current_user.id:
+        abort(404, description="Reservation not found.")
+    return render_template("reservation_confirmed.html", reservation=reservation)
 
 @listings_bp.route("/listings/new", methods=["GET", "POST"])
 @login_required

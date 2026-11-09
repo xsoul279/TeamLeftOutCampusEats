@@ -15,6 +15,13 @@
          <p><strong>Portions Remaining:</strong> {{ listing.portions_remaining }}</p>
          <p><strong>Pickup window:</strong> {{ listing.pickup_start.strftime("%m/%d/%Y %I:%M %p") }} to {{ listing.pickup_end.strftime("%m/%d/%Y %I:%M %p") }}</p>
          <p><strong>Dietary Tags:</strong> {{ listing.tags | map(attribute="value") | join(", ") or "None" }}</p>
+         <form method="post" action="{{ url_for('listings.reserve_listing', listing_id=listing.id) }}">
+            <select name="portions">
+                <option value="1">1 Portion</option>
+                <option value="2">2 Portions</option>
+            </select>
+            <button type="submit">Reserve</button>
+         </form>
     </li>
     {% endfor %}
 </ul>
