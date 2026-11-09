@@ -7,20 +7,14 @@
 '   0..*   = none, one, or a bunch (any amount)
 '   1..*   = at least one
 
-' "enum" = fixed list of options. User is either a STUDENT or a VENDOR
-enum Role {
-    STUDENT
-    VENDOR
-}
-
 class User {
     id : int
-    name : str
+    username : str {unique}
     email : str {unique}
     password_hash : str
 
-    ' role uses the Role list up top
-    role : Role
+    ' role is saved as plain text, either "student" or "vendor"
+    role : str {student | vendor}
     creation_date : datetime
     active : bool
 }
@@ -56,6 +50,7 @@ class Reservation {
     created_at : datetime
 }
 
+' "enum" = fixed list of options
 enum ReservationStatus {
     ACTIVE
     PICKED_UP
