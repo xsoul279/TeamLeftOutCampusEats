@@ -1,0 +1,43 @@
+@startuml
+title US7 - Confirm Pickup
+
+actor Vendor
+boundary Browser
+control "Flask Route" as Route
+entity "Reservation Model" as Model
+database PostgreSQL as DB
+
+Vendor -> Browser: Enter pickup code
+Browser -> Route: Submit pickup code
+Route -> Route: Check login and vendor role
+
+alt Not an authenticated vendor
+    Route --> Browser: Login required or access denied
+    Browser --> Vendor: Show access message
+else Authenticated vendor
+    Route -> Model: Confirm pickup(code, vendor ID)
+    Model -> DB: BEGIN
+    Model -> DB: Find reservation and listing by code\nLock reservation for update
+    DB --> Model: Reservation details or no match
+
+    alt Invalid code, wrong vendor, or inactive reservation
+        Model -> DB: ROLLBACK
+        Model --> Route: Reject pickup
+        Route --> Browser: Display error
+        Browser --> Vendor: Pickup rejected
+    else Outside pickup window
+        Model -> DB: ROLLBACK
+        Model --> Route: Reject pickup
+        Route --> Browser: Display pickup-window error
+        Browser --> Vendor: Pickup rejected
+    else Valid pickup
+        Model -> DB: Update status to picked up
+        Model -> DB: COMMIT
+        DB --> Model: Saved
+        Model --> Route: Student name and portions
+        Route --> Browser: Display confirmation
+        Browser --> Vendor: Show name and portions to hand out
+    end
+end
+
+@enduml
