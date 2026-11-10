@@ -30,15 +30,8 @@ specifications are retained below.
 | US1 | 1: When on the registration page, entering a name, unique email, password of at least 8 characters, and selecting a valid role ('vendor', or 'student') will store my account in PostgreSQL and I am then redirected to the login page. | Caine | 10/27/26 | passed | fixed error where username wasn't being passed - mismatch in the templates. Fixed and registering is now working |
 | US1 | 2: A duplicated email is rejected and an error message is shown | Caine | 10/27/26 | passed | duplicate email is rejected and the message "Email is already registered" is displayed. |
 | US1 | 3: Account is not created if a required field is empty and the empty field is identified | Caine | 10/27/26 | passed | tested for each field and all of them at once - all properly display error messages individually and when all are blank, displays all error messages for every field. |
-| US1 | 4: Passwords are stored hashed, not in plain text | Caine | 10/27/26 | passed | checked that passwords are properly hashed - will attach below |
+| US1 | 4: Passwords are stored hashed, not in plain text | Caine | 10/27/26 | passed | checked in PostgreSQL that passwords are stored as scrypt hashes, not plain text |
 | US1 | 5: If an account exists and the correct user/pass are entered, user is redirected to the home page for selected role. If wrong pass, an error message is displayed | Caine | 10/27/26 | passed | tested for email/pass error message works. Tested directly after registering, everything correctly saved. |
-
-
-id |    username    |           email            |  role   | password_hash |
-| --- | --- | --- | --- | --- |
-| 1 | Flat Top Grill | flattopgrill@msudenver.edu | vendor  | scrypt:32768:8:1$PUs4wq9KwXAE7BqZ$7fbbf0b3ea8ccb680a45943aab14d6414cfc567eee76ce4de27f2ae8153bdce1fba9c5dbb51408920af5e777f8dcab5bf1ef497fd0eee19abe0d242ee6660a28 
-| 2 | Lucky Guy   | identityv@msudenver.edu    | student | scrypt:32768:8:1$iJzlcitFV5K9aEld$e9314e7b90e76e062635a273136e3fe903d3bf3b0a96f73def8bad31da5a8187a033b39151c19578773438381036a10e14590d1d2faf8de0aecce65e462dad76 
-| 3 | Caine    | luciferseve@gmail.com      | student | scrypt:32768:8:1$RIl5aGONMllGf88B$81e73e174bc2cb854a98391883578bc189e597410e963e36758576e8726215869301a8eec9ccfe8923996a4c301b2966607891b4aca62a53c06fcd05eab27acc
 
 ## US2 Manual test cases ##
 
@@ -111,15 +104,16 @@ update the Date and Result columns.
 
 | User story | Acceptance criterion | Tester | Date | Result | Notes |
 | --- | --- | --- | --- | --- | --- |
-| US3 | 1: only available listings shown | | | | |
-| US3 | 2: listing shows all its details | | | | |
-| US3 | 3: sorted by pickup end, soonest first | | | | |
-| US3 | 4: message when no listings | | | | |
-| US4 | 1: reserve portions, get pickup code | | | | |
-| US4 | 2: more portions than remain rejected | | | | |
-| US4 | 3: second reservation on same listing rejected | | | | |
-| US4 | 4: last portion, only one student wins | | | | |
+| US3 | 1: only available listings shown | Ethan | 11/08/26 | passed | Active seed listings were shown. After cancelling one, ending one, and selling out one (plus 20 sold-out test listings), none of them appeared. |
+| US3 | 2: listing shows all its details | Ethan | 11/08/26 | passed | Each seed listing card shows title, vendor name, pickup location, dietary tags, portions remaining, and pickup window. |
+| US3 | 3: sorted by pickup end, soonest first | Ethan | 11/08/26 | passed | Seed listings ending 10:25 PM, 11:25 PM, and 12:25 AM appeared in that order. |
+| US3 | 4: message when no listings | Ethan | 11/08/26 | passed | With every listing cancelled, ended, or sold out, the page showed "No listings are available right now." instead of a blank page. |
+| US4 | 1: reserve portions, get pickup code | Ethan | 11/08/26 | passed | Reserved 2 grain bowls: confirmation page showed a 6-character pickup code and portions remaining went from 8 to 6. Reservation stored as ACTIVE in PostgreSQL. |
+| US4 | 2: more portions than remain rejected | Ethan | 11/08/26 | passed | Asked for 2 bakery bags with 1 left: "Not enough portions remaining" error shown, no reservation created, still 1 left. |
+| US4 | 3: second reservation on same listing rejected | Ethan | 11/08/26 | passed | Reserved 1 lentil soup, then tried again: "You already have a reservation" error shown, still only one reservation and 5 left. |
+| US4 | 4: last portion, only one student wins | Ethan | 11/08/26 | passed | Two students in separate windows reserved the last bakery bag: one got a code, the other an error, and 0 left (not -1). Also ran 20 rounds of truly simultaneous requests from a script: exactly one winner every round, never below 0. |
 | US7 | 1: in-window code marks picked up, shows student and portions | | | | |
+| US7 | 1b: code after the pickup window rejected | | | | |
 | US7 | 2a: unknown code rejected | | | | |
 | US7 | 2b: another vendor's code rejected | | | | |
 | US7 | 2c: already-used code rejected | | | | |
@@ -184,14 +178,15 @@ window ends 4 hours after startup. Pickup codes are random; look them up with:
 
 `docker compose exec db psql -U campuseats -d campuseats -c "SELECT l.title, u.username AS vendor, r.pickup_code, r.portions, r.status FROM reservations r JOIN listings l ON l.id = r.listing_id JOIN users u ON u.id = l.vendor_id ORDER BY l.title"`
 
-Run the rows in this order: 2a, 2b, 1, 2c, 2d, 3 (2b needs the soup code still
+Run the rows in this order: 2a, 2b, 1, 2c, 2d, 1b, 3 (2b needs the soup code still
 active; 2c needs it already used).
 
 | AC | What to do | What should happen |
 | --- | --- | --- |
-| 2a | Log in as Flat Top Grill. On the Confirm pickup page, enter `ZZZZZZ` (not in the query output). | Rejected with a message that the code was not found. No reservation changes. |
+| 2a | Log in as Flat Top Grill. Click **Confirm a pickup** on Vendor Home (`/pickups`) and enter `ZZZZZZ` (not in the query output). | Rejected with a message that the code was not found. No reservation changes. |
 | 2b | Log out. Log in as Campus Cafe and enter the `[Demo] Sold-out soup` code. | Rejected with a message that the code isn't for one of your listings. The soup reservation is still `ACTIVE`. |
 | 1 | Log out. Log in as Flat Top Grill and enter the `[Demo] Sold-out soup` code. | The page shows Lucky Guy and 2 portions to hand out. The query shows the reservation as `PICKED_UP`. |
 | 2c | Enter the same soup code again. | Rejected with a message that the code was already used. Status stays `PICKED_UP`. |
 | 2d | Enter the `[Demo] Cancelled bakery bags` code. | Rejected with a message that the reservation was cancelled. Status stays `CANCELLED`. |
-| 3 | Open the reservations for `[Demo] Ended vegetarian tray` (its pickup window has ended). | Lucky Guy's reservation is shown with status "No-show". |
+| 1b | Enter the `[Demo] Ended vegetarian tray` code. | Rejected with a message that the pickup window has ended. The reservation is not marked `PICKED_UP`. |
+| 3 | On the same page, look under **Reservations on your listings** for `[Demo] Ended vegetarian tray` (its pickup window has ended). | Lucky Guy's reservation is shown with status "No-show", and the query shows `NO_SHOW`. |
