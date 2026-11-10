@@ -112,13 +112,13 @@ update the Date and Result columns.
 | US4 | 2: more portions than remain rejected | Ethan | 11/08/26 | passed | Asked for 2 bakery bags with 1 left: "Not enough portions remaining" error shown, no reservation created, still 1 left. |
 | US4 | 3: second reservation on same listing rejected | Ethan | 11/08/26 | passed | Reserved 1 lentil soup, then tried again: "You already have a reservation" error shown, still only one reservation and 5 left. |
 | US4 | 4: last portion, only one student wins | Ethan | 11/08/26 | passed | Two students in separate windows reserved the last bakery bag: one got a code, the other an error, and 0 left (not -1). Also ran 20 rounds of truly simultaneous requests from a script: exactly one winner every round, never below 0. |
-| US7 | 1: in-window code marks picked up, shows student and portions | | | | |
-| US7 | 1b: code after the pickup window rejected | | | | |
-| US7 | 2a: unknown code rejected | | | | |
-| US7 | 2b: another vendor's code rejected | | | | |
-| US7 | 2c: already-used code rejected | | | | |
-| US7 | 2d: cancelled code rejected | | | | |
-| US7 | 3: ended window shows active reservations as no-show | | | | |
+| US7 | 1: in-window code marks picked up, shows student and portions | Greg | 11/10/26 | passed | Flat Top Grill entered the `[Demo] Sold-out soup` code: "Picked up: Lucky Guy, 2 portion(s) to hand out." The query shows `PICKED_UP`. |
+| US7 | 1b: code after the pickup window rejected | Greg | 11/10/26 | passed | Entered the `[Demo] Ended vegetarian tray` code: "The pickup window for this listing has ended." Not marked `PICKED_UP` (the query shows `NO_SHOW`). |
+| US7 | 2a: unknown code rejected | Greg | 11/10/26 | passed | Flat Top Grill entered `ZZZZZZ`: "No reservation matches code ZZZZZZ." No reservation changed. |
+| US7 | 2b: another vendor's code rejected | Greg | 11/10/26 | passed | Campus Cafe entered the soup code: "That code isn't for one of your listings." The soup is still `ACTIVE`. |
+| US7 | 2c: already-used code rejected | Greg | 11/10/26 | passed | Entered the soup code again: "This reservation was already picked up." Still `PICKED_UP`. |
+| US7 | 2d: cancelled code rejected | Greg | 11/10/26 | passed | Entered the `[Demo] Cancelled bakery bags` code: "This reservation was cancelled." Still `CANCELLED`. |
+| US7 | 3: ended window shows active reservations as no-show | Greg | 11/10/26 | passed | Under Reservations on your listings, the ended tray shows Lucky Guy, 1 portion, "No-show", and the query shows `NO_SHOW`. No pickup codes appear on the page. |
 
 ## Test cases
 
