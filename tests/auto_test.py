@@ -19,6 +19,10 @@ def new_user(role="student"):
         "password": f"this_is_a_password",
         "role" : role,
     }
+HOME_TITLE = {
+    "student": "Student Home",
+    "vendor": "Vendor Home",
+}
 
 @pytest.fixture
 def driver():
@@ -27,6 +31,13 @@ def driver():
     driver = webdriver.Chrome(options=options)
     yield driver
     driver.quit()
+
+def wait_for_url(driver, url_part, timeout=5):
+    WebDriverWait(driver, timeout).until(EC.url_contains(url_part))
+    
+def wait_for_home(driver, role, timeout=5):
+    wait_for_url(driver, "/home", timeout)
+    WebDriverWait(driver, timeout).until(EC.title_is(HOME_TITLE[role]))
 
 def register(driver, user, skip_browser_validation=True):
     driver.get(f"{BASE_URL}/register")
@@ -44,7 +55,7 @@ def test_duplicate_reject_login(driver):
     wait = WebDriverWait(driver, 5)
 
     register(driver, user)
-    wait.until(EC.url_contains("/login"))
+    wait_for_url(driver, "/login")
 
     duplicate = {**user, "username": f"dup_{uuid.uuid4().hex[:8]}"}
     register(driver, duplicate)
@@ -57,7 +68,8 @@ def test_duplicate_reject_login(driver):
 
     driver.get(f"{BASE_URL}/login")
     login(driver, user)
-    wait.until(EC.url_contains("/home"))
+    wait_for_home(driver, user["role"])
+
     
 
 
@@ -72,10 +84,47 @@ def test_register_and_login(driver, role):
     wait = WebDriverWait(driver, 5)
 
     register(driver, user)
-    wait.until(EC.url_contains("/login"))
+    wait_for_url(driver, "/login")
 
     login(driver, user)
-    wait.until(EC.url_contains("/home"))
+    wait_for_home(driver, role)
+               
+
+@pytest.mark.parametrize("blank_fields", [["username"], ["email"], ["password"], ["username", "email", "password"]])
+def test_empty_field(driver, blank_fields):
+
+    user = new_user("student")
+    form_field = {**user, **{f: "" for f in blank_fields}}
+
+    register(driver, form_field)
+
+    wait = WebDriverWait(driver, 5)
+    warning = wait.until(
+        EC.visibility_of_element_located((By.CSS_SELECTOR, ".messages .message[data-category='warning']"))
+    )
+    assert warning.text == "All fields are required."
+    assert "/register" in driver.current_url
+
+    register(driver, user)
+    wait_for_url(driver, "/login")
+
+    login(driver, user)
+    wait_for_home(driver, user["role"])
+    
+
+def test_wrong_password(driver):
+    user = new_user("student")
+    wait = WebDriverWait(driver, 5)
+
+    register(driver, user)
+    wait_for_url(driver, "/login")
+
+    login(driver, {**user, "password": "wrongpassword"})
+    warning = wait.until(
+        EC.visibility_of_element_located((By.CSS_SELECTOR, ".messages .message[data-category='warning']"))
+    )
+    assert warning.text == "Invalid email or password."
+    
 
 
 
