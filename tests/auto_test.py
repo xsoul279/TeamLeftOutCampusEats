@@ -36,8 +36,9 @@ def wait_for_url(driver, url_part, timeout=5):
     WebDriverWait(driver, timeout).until(EC.url_contains(url_part))
     
 def wait_for_home(driver, role, timeout=5):
-    wait_for_url(driver, "/home", timeout)
-    WebDriverWait(driver, timeout).until(EC.title_is(HOME_TITLE[role]))
+    WebDriverWait(driver, timeout).until(
+        EC.text_to_be_present_in_element((By.TAG_NAME, "h1"), HOME_TITLE[role])
+    )
 
 def register(driver, user, skip_browser_validation=True):
     driver.get(f"{BASE_URL}/register")
@@ -71,6 +72,8 @@ def test_duplicate_reject_login(driver):
     wait_for_home(driver, user["role"])
 
     
+def visual_warning(driver, expected_text, timeout=5):
+    return {e.text for e in driver.find_elements(By.CSS_SELECTOR, ".messages .message[data-category='warning']")}
 
 
 def login(driver, user):
@@ -90,19 +93,19 @@ def test_register_and_login(driver, role):
     wait_for_home(driver, role)
                
 
-@pytest.mark.parametrize("blank_fields", [["username"], ["email"], ["password"], ["username", "email", "password"]])
-def test_empty_field(driver, blank_fields):
+
+def missing_field(driver, blank_fields):
 
     user = new_user("student")
     form_field = {**user, **{f: "" for f in blank_fields}}
 
     register(driver, form_field)
-
+    expected = {f"{field.capitalize()} is required." for field in blank_fields}
     wait = WebDriverWait(driver, 5)
-    warning = wait.until(
-        EC.visibility_of_element_located((By.CSS_SELECTOR, ".messages .message[data-category='warning']"))
+    warnings = wait.until(
+        lambda d: visual_warning(d, expected) == expected
     )
-    assert warning.text == "All fields are required."
+    assert warnings == expected
     assert "/register" in driver.current_url
 
     register(driver, user)
@@ -110,6 +113,13 @@ def test_empty_field(driver, blank_fields):
 
     login(driver, user)
     wait_for_home(driver, user["role"])
+
+@pytest.mark.parametrize("blank_fields", [["username"], ["email"], ["password"], ["username", "email", "password"]])
+def test_empty_field(driver, blank_fields):
+    missing_field(driver, blank_fields)
+
+def test_all_fields_empty(driver):
+    missing_field(driver, ["username", "email", "password"])
     
 
 def test_wrong_password(driver):
@@ -123,7 +133,8 @@ def test_wrong_password(driver):
     warning = wait.until(
         EC.visibility_of_element_located((By.CSS_SELECTOR, ".messages .message[data-category='warning']"))
     )
-    assert warning.text == "Invalid email or password."
+    assert warning.text == "Invalid email/password."
+    assert "/login" in driver.current_url
     
 
 
