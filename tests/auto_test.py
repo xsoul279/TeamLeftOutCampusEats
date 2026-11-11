@@ -102,10 +102,9 @@ def missing_field(driver, blank_fields):
     register(driver, form_field)
     expected = {f"{field.capitalize()} is required." for field in blank_fields}
     wait = WebDriverWait(driver, 5)
-    warnings = wait.until(
-        lambda d: visual_warning(d, expected) == expected
-    )
-    assert warnings == expected
+    wait.until(lambda d: visual_warning(d, expected) == expected)
+
+    assert visual_warning(driver, expected) == expected
     assert "/register" in driver.current_url
 
     register(driver, user)
