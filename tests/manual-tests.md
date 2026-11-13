@@ -119,6 +119,9 @@ update the Date and Result columns.
 | US7 | 2c: already-used code rejected | | | | |
 | US7 | 2d: cancelled code rejected | | | | |
 | US7 | 3: ended window shows active reservations as no-show | | | | |
+| US8 | 1: only listings with all selected tags shown | | | | |
+| US8 | 2: location filter, combinable with tags | | | | |
+| US8 | 3: Clear filters shows all available listings | | | | |
 
 ## Test cases
 
@@ -147,6 +150,22 @@ account.
 | 2 | Pick a listing with exactly 1 portion remaining. Try to reserve 2. | An error says there aren't enough portions. No reservation is created and portions remaining is still 1. |
 | 3 | Reserve 1 portion from a listing. Then try to reserve from the same listing again. | A message says you already have a reservation for this listing. No second reservation is created. |
 | 4 | Pick a listing with exactly 1 portion remaining. Open the app in a normal window and a private window, logged in as two different students. Open the reserve form for that listing in both, then click Reserve in both as close together as you can. | Exactly one window gets a pickup code. The other gets an error. Portions remaining is 0, not -1. |
+
+### US8: Filter listings
+
+Uses the seed data (#53 and #56). Start from fresh data (`docker compose down -v`,
+then `docker compose up --build`) and test within 4 hours: the seed listings'
+pickup windows end 4 to 6 hours after startup. Log in as Lucky Guy and click
+**Browse available listings**. Before filtering, four listings show: Vegetarian
+grain bowls (Student Union counter; Vegetarian), Vegan lentil soup (Campus Cafe
+counter; Vegan, Gluten-free), `[Demo] Campus Cafe sandwiches` (Campus Cafe
+counter; no tags), and Bakery bags (Bakery pickup desk; no tags).
+
+| AC | What to do | What should happen |
+| --- | --- | --- |
+| 1 | Check **Vegan** and **Gluten-free**, then click **Filter**. Then uncheck Gluten-free, check **Vegetarian**, and click **Filter**. | First: only Vegan lentil soup (`[Demo] Sold-out soup` has the same tags but stays hidden). Second: no listings and a message that none match the filters, because a listing must have every selected tag. The chosen tags stay checked. |
+| 2 | Click **Clear filters**. Choose **Campus Cafe counter** and click **Filter**. Then also check **Vegan** and click **Filter**. | First: Vegan lentil soup and `[Demo] Campus Cafe sandwiches`. Second: only Vegan lentil soup. The location stays selected. |
+| 3 | With filters applied, click **Clear filters**. | All four available listings show again, with no tags checked and "Any location" selected. |
 
 ### US7: Confirm pickup
 
