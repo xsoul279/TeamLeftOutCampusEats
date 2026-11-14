@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}<h1>Reservation Confirmed</h1>
+<h2 style="margin-top: 1.5rem; text-align: center">Pickup Code: {{ reservation.pickup_code }}</h2>
+<p>Your reservation for <strong>{{ reservation.portions }} portion(s)</strong> of <strong>"{{ reservation.listing.title }}"</strong> has been confirmed.</p>
+<p><strong>Pickup Location:</strong> {{ reservation.listing.pickup_location }}</p>
+<p><strong>Pickup Time:</strong> {{ reservation.listing.pickup_start.strftime("%m/%d/%Y %I:%M %p") }} to {{ reservation.listing.pickup_end.strftime("%m/%d/%Y %I:%M %p") }}</p>
+<p><a class="button" href="{{ url_for('listings.browse_listings') }}">Back to listings</a></p>
+{% endblock %}

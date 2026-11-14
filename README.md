@@ -83,6 +83,26 @@ zero or more dietary tags, and pickup windows starting 30-60 minutes after
 initialization and ending 4-6 hours after initialization, in America/Denver time.
 No manual registration or SQL is required.
 
+For Sprint 2 testing, startup also adds these fixtures once:
+
+| Fixture | Owner | State and reservations |
+| --- | --- | --- |
+| `[Demo] Ended vegetarian tray` | Flat Top Grill | Ended window; 3 total, 2 remaining; 1 active uncollected reservation for later no-show testing. |
+| `[Demo] Cancelled bakery bags` | Flat Top Grill | Cancelled; 4 total, 4 remaining; 1 cancelled reservation. |
+| `[Demo] Sold-out soup` | Flat Top Grill | Open pickup window; 2 total, 0 remaining; an active reservation holds both portions. |
+| `[Demo] Campus Cafe sandwiches` | Campus Cafe | Available; 7 portions; belongs to a second vendor for ownership checks. |
+
+The second vendor login is `campuscafe@campuseats.example` with password
+`cafe_demo20`. The fixture reservations belong to Lucky Guy and receive unique
+six-character pickup codes. Their states prepare later stories; the current
+student home page does not yet provide browsing or reservation management.
+
+Existing databases receive this additional dataset on their next startup even
+if the original demo seed has already run. Each dataset has its own completion
+record, so restarting or rerunning `flask seed` does not overwrite changes or
+refresh old pickup windows. Historical fixtures are inserted as seed data;
+they do not relax the new-listing form's time validation.
+
 Schema creation and seeding run before Gunicorn starts its workers. The
 `seed_runs` table records completion of the dataset in the same transaction as
 the demo data. Repeated starts and `docker compose exec web flask seed` preserve
