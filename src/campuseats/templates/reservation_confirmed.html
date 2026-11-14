@@ -5,4 +5,6 @@
 <p><strong>Pickup Location:</strong> {{ reservation.listing.pickup_location }}</p>
 <p><strong>Pickup Time:</strong> {{ reservation.listing.pickup_start.strftime("%m/%d/%Y %I:%M %p") }} to {{ reservation.listing.pickup_end.strftime("%m/%d/%Y %I:%M %p") }}</p>
 <p><a class="button" href="{{ url_for('listings.browse_listings') }}">Back to listings</a></p>
+<p><a class="button" href="{{ url_for('reservations.view_reservations') }}">View My Reservations</a></p>
+
 {% endblock %}

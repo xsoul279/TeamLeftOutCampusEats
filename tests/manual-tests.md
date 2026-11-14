@@ -112,6 +112,9 @@ update the Date and Result columns.
 | US4 | 2: more portions than remain rejected | Ethan | 11/08/26 | passed | Asked for 2 bakery bags with 1 left: "Not enough portions remaining" error shown, no reservation created, still 1 left. |
 | US4 | 3: second reservation on same listing rejected | Ethan | 11/08/26 | passed | Reserved 1 lentil soup, then tried again: "You already have a reservation" error shown, still only one reservation and 5 left. |
 | US4 | 4: last portion, only one student wins | Ethan | 11/08/26 | passed | Two students in separate windows reserved the last bakery bag: one got a code, the other an error, and 0 left (not -1). Also ran 20 rounds of truly simultaneous requests from a script: exactly one winner every round, never below 0. |
+| US6 | 1: Students can view reservations with all relevant details | Caine | 11/13/2026 | passed | All reservations regardless of status are displayed with vendor, code, status, portion, location, and pickup time information. |
+| US6 | 2: Active reservations w/valid pickup windows are cancellable and portions are returned. | Caine | 11/13/2026 | passed | Only active reservations with valid pickup windows display a cancellation button. Portions go from 6 to 5 and when the reservation is cancelled, the portions on the listing goes back up to 6. |
+| US6 | 3: Inactive reservations/an invalid pickup window don't display a cancel button | Caine | 11/13/2026 | passed | Only reservations that are active and have a valid pickup window display the 'Cancel Reservation' button. |
 | US7 | 1: in-window code marks picked up, shows student and portions | | | | |
 | US7 | 1b: code after the pickup window rejected | | | | |
 | US7 | 2a: unknown code rejected | | | | |
