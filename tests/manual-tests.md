@@ -119,9 +119,9 @@ update the Date and Result columns.
 | US7 | 2c: already-used code rejected | Pete | 11/10/26 | passed | Entered the soup code again: "This reservation was already picked up." Still `PICKED_UP`. |
 | US7 | 2d: cancelled code rejected | Pete | 11/10/26 | passed | Entered the `[Demo] Cancelled bakery bags` code: "This reservation was cancelled." Still `CANCELLED`. |
 | US7 | 3: ended window shows active reservations as no-show | Pete | 11/10/26 | passed | Under Reservations on your listings, the ended tray shows Lucky Guy, 1 portion, "No-show", and the query shows `NO_SHOW`. No pickup codes appear on the page. |
-| US8 | 1: only listings with all selected tags shown | | | | |
-| US8 | 2: location filter, combinable with tags | | | | |
-| US8 | 3: Clear filters shows all available listings | | | | |
+| US8 | 1: only listings with all selected tags shown | Pete | 11/14/26 | passed | Vegan + Gluten-free showed only Vegan lentil soup (`[Demo] Sold-out soup` stayed hidden). Vegan + Vegetarian showed no listings and "No listings match your filters." The checked tags stayed checked. |
+| US8 | 2: location filter, combinable with tags | Pete | 11/14/26 | passed | Campus Cafe counter showed Vegan lentil soup and `[Demo] Campus Cafe sandwiches`. Adding Vegan showed only Vegan lentil soup. The location stayed selected. |
+| US8 | 3: Clear filters shows all available listings | Pete | 11/14/26 | passed | Clear filters showed all four available listings again, with no tags checked and "Any location" selected. |
 
 ## Test cases
 
