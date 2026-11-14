@@ -30,11 +30,15 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     from .listings import listings_bp
     from .main import bp
     from .pickups import pickups_bp
+    from .reservations import reservations_bp
+
     from .seed import seed_command
+
 
     app.register_blueprint(bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(listings_bp)
     app.register_blueprint(pickups_bp)
+    app.register_blueprint(reservations_bp)
     app.cli.add_command(seed_command)
     return app

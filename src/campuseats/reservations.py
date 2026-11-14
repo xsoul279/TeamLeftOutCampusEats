@@ -13,7 +13,6 @@ from .extensions import db
 from .models import DietaryTag, Listing, Reservation, ReservationStatus
 
 reservations_bp = Blueprint("reservations", __name__)
-
 def _local_now():
     return datetime.now(ZoneInfo("America/Denver")).replace(tzinfo=None)
 
@@ -27,10 +26,11 @@ def view_reservations():
     now = _local_now()
     reservations = db.session.scalars(
         select(Reservation)
+        .join(Listing, Reservation.listing_id == Listing.id)
         .where(
             Reservation.student_id == current_user.id
         )
-        .order_by(Reservation.pickup_end)
+        .order_by(Listing.pickup_end.desc())
     ).all()
 
     return render_template("reservations.html", reservations=reservations, now=now)
@@ -48,24 +48,24 @@ def cancel_reservation(reservation_id):
     listing = db.session.get(Listing, reservation.listing_id)
     db.session.refresh(reservation, with_for_update=True)
     
-    if reservation.pickup_end <= _local_now():
+    if listing.pickup_end <= _local_now():
         db.session.rollback()
-        flash("This reservation cannot be canceled.", "error")
+        flash("This reservation cannot be cancelled.", "error")
         return redirect(url_for("reservations.view_reservations"))
     
     if reservation.status != ReservationStatus.ACTIVE:
         db.session.rollback()
-        flash("This reservation cannot be canceled.", "error")
+        flash("This reservation cannot be cancelled.", "error")
         return redirect(url_for("reservations.view_reservations"))
 
-    reservation.status = ReservationStatus.CANCELED
+    reservation.status = ReservationStatus.CANCELLED
     listing.portions_remaining += reservation.portions
     try:
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()
-        flash("Something went wrong canceling this reservation. Please try again.", "error")
+        flash("Something went wrong cancelling this reservation. Please try again.", "error")
         return redirect(url_for("reservations.view_reservations"))
 
-    flash("Reservation canceled successfully.", "success")
+    flash("Reservation cancelled successfully.", "success")
     return redirect(url_for("reservations.view_reservations"))
