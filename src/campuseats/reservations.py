@@ -1,16 +1,15 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
-import secrets
 
 from flask import (
-    Blueprint, abort, flash, redirect, render_template, request, url_for,
+    Blueprint, abort, flash, redirect, render_template, url_for,
 )
 from flask_login import current_user, login_required
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
 
 from .extensions import db
-from .models import DietaryTag, Listing, Reservation, ReservationStatus
+from .models import Listing, Reservation, ReservationStatus
 
 reservations_bp = Blueprint("reservations", __name__)
 def _local_now():
