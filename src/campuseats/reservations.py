@@ -44,7 +44,7 @@ def cancel_reservation(reservation_id):
     if not reservation or reservation.student_id != current_user.id:
         abort(404, description="Reservation not found.")
 
-    listing = db.session.get(Listing, reservation.listing_id)
+    listing = db.session.get(Listing, reservation.listing_id, with_for_update=True)
     db.session.refresh(reservation, with_for_update=True)
     
     if listing.pickup_end <= _local_now():
