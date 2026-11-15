@@ -144,6 +144,37 @@ class Reservation(db.Model):
 
     student: Mapped[User] = relationship(back_populates="reservations")
     listing: Mapped[Listing] = relationship(back_populates="reservations")
+    rating: Mapped["Rating | None"] = relationship(
+        back_populates="reservation",
+        uselist=False,
+    )
+
+class Rating(db.Model):
+    """One student rating for a collected reservation."""
+
+    __tablename__ = "ratings"
+    __table_args__ = (
+        CheckConstraint(
+            "stars BETWEEN 1 AND 5",
+            name="rating_stars_range",
+        ),
+        CheckConstraint(
+            "char_length(comment) <= 300",
+            name="rating_comment_length",
+        ),
+    )
+
+    reservation_id: Mapped[int] = mapped_column(
+        ForeignKey("reservations.id"),
+        primary_key=True,
+    )
+    stars: Mapped[int]
+    comment: Mapped[str] = mapped_column(String(300), default="")
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+
+    reservation: Mapped[Reservation] = relationship(
+        back_populates="rating",
+    )
       
 @login_manager.user_loader
 def load_user(user_id):

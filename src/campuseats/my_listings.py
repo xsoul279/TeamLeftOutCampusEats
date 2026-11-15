@@ -8,7 +8,9 @@ from werkzeug.datastructures import MultiDict
 
 from .extensions import db
 from .listings import validate_listing_form
-from .models import DietaryTag, Listing, ReservationStatus
+from .models import (
+    DietaryTag, Listing, Rating, Reservation, ReservationStatus,
+)
 from .pickups import mark_no_shows
 
 my_listings_bp = Blueprint("my_listings", __name__)
@@ -60,14 +62,43 @@ def my_listings():
 @my_listings_bp.get("/my-listings/<int:listing_id>")
 @login_required
 def listing_detail(listing_id):
-    """AC 5: who reserved (name, portions, status)."""
+    """Show an owned listing, its reservations, and pickup ratings."""
     _vendor_only()
-    mark_no_shows(current_user.id)  # US7: store no-shows before showing statuses
+    mark_no_shows(current_user.id)
     db.session.commit()
+
     listing = _own_listing(listing_id)
-    reservations = sorted(listing.reservations, key=lambda r: r.created_at)
-    return render_template("listing_detail.html", listing=listing,
-                           reservations=reservations, reserved=_reserved(listing))
+    reservations = sorted(
+        listing.reservations,
+        key=lambda reservation: reservation.created_at,
+    )
+
+    ratings = db.session.scalars(
+        select(Rating)
+        .join(
+            Reservation,
+            Rating.reservation_id == Reservation.id,
+        )
+        .where(Reservation.listing_id == listing.id)
+        .order_by(
+            Rating.created_at.desc(),
+            Rating.reservation_id.desc(),
+        )
+    ).all()
+
+    average_rating = (
+        sum(rating.stars for rating in ratings) / len(ratings)
+        if ratings else None
+    )
+
+    return render_template(
+        "listing_detail.html",
+        listing=listing,
+        reservations=reservations,
+        reserved=_reserved(listing),
+        ratings=ratings,
+        average_rating=average_rating,
+    )
 
 
 @my_listings_bp.route("/my-listings/<int:listing_id>/edit", methods=["GET", "POST"])

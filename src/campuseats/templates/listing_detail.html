@@ -38,5 +38,29 @@
 <p>No one has reserved this listing yet.</p>
 {% endif %}
 
+<h2>Pickup ratings</h2>
+
+{% if ratings %}
+<p>
+    <strong>Average rating:</strong>
+    {{ "%.1f" | format(average_rating) }}/5
+    ({{ ratings|length }}
+    rating{% if ratings|length != 1 %}s{% endif %})
+</p>
+
+<ul>
+    {% for rating in ratings %}
+    <li>
+        <strong>{{ rating.stars }}/5</strong>
+        {% if rating.comment %}
+        <p>{{ rating.comment }}</p>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No ratings yet.</p>
+{% endif %}
+
 <p><a href="{{ url_for('my_listings.my_listings') }}">Back to My Listings</a></p>
 {% endblock %}
