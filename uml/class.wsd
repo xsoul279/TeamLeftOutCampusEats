@@ -80,6 +80,22 @@ note bottom of Reservation
   reservation per listing (US4 AC 3).
 end note
 
+' US10: a student rates a picked-up reservation once.
+class Rating {
+    ' {1..5} = has to be between 1 and 5
+    stars : int {1..5}
+    comment : str {up to 300 chars}
+    created_at : datetime
+}
+
+' One Reservation has 0..1 Ratings. One Rating has 1 Reservation.
+Reservation "1" -- "0..1" Rating
+
+note bottom of Rating
+  Uses the reservation's id as its key,
+  so each reservation is rated at most once (US10 AC 2).
+end note
+
 class SeedRun <<bootstrap>> {
     name : str {primary key}
     created_at : datetime
