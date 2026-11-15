@@ -1,3 +1,4 @@
+from .pickups import mark_no_shows
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -21,7 +22,12 @@ def _local_now():
 def view_reservations():
     if current_user.role != "student":
         abort(403, description="Only students can view reservations.")
-
+    try:
+        mark_no_shows()
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        
     now = _local_now()
     reservations = db.session.scalars(
         select(Reservation)
