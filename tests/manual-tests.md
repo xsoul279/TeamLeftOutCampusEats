@@ -115,13 +115,16 @@ update the Date and Result columns.
 | US6 | 1: Students can view reservations with all relevant details | Caine | 11/13/2026 | passed | All reservations regardless of status are displayed with vendor, code, status, portion, location, and pickup time information. |
 | US6 | 2: Active reservations w/valid pickup windows are cancellable and portions are returned. | Caine | 11/13/2026 | passed | Only active reservations with valid pickup windows display a cancellation button. Portions go from 6 to 5 and when the reservation is cancelled, the portions on the listing goes back up to 6. |
 | US6 | 3: Inactive reservations/an invalid pickup window don't display a cancel button | Caine | 11/13/2026 | passed | Only reservations that are active and have a valid pickup window display the 'Cancel Reservation' button. |
-| US7 | 1: in-window code marks picked up, shows student and portions | | | | |
-| US7 | 1b: code after the pickup window rejected | | | | |
-| US7 | 2a: unknown code rejected | | | | |
-| US7 | 2b: another vendor's code rejected | | | | |
-| US7 | 2c: already-used code rejected | | | | |
-| US7 | 2d: cancelled code rejected | | | | |
-| US7 | 3: ended window shows active reservations as no-show | | | | |
+| US7 | 1: in-window code marks picked up, shows student and portions | Pete | 11/10/26 | passed | Flat Top Grill entered the `[Demo] Sold-out soup` code: "Picked up: Lucky Guy, 2 portion(s) to hand out." The query shows `PICKED_UP`. |
+| US7 | 1b: code after the pickup window rejected | Pete | 11/10/26 | passed | Entered the `[Demo] Ended vegetarian tray` code: "The pickup window for this listing has ended." Not marked `PICKED_UP` (the query shows `NO_SHOW`). |
+| US7 | 2a: unknown code rejected | Pete | 11/10/26 | passed | Flat Top Grill entered `ZZZZZZ`: "No reservation matches code ZZZZZZ." No reservation changed. |
+| US7 | 2b: another vendor's code rejected | Pete | 11/10/26 | passed | Campus Cafe entered the soup code: "That code isn't for one of your listings." The soup is still `ACTIVE`. |
+| US7 | 2c: already-used code rejected | Pete | 11/10/26 | passed | Entered the soup code again: "This reservation was already picked up." Still `PICKED_UP`. |
+| US7 | 2d: cancelled code rejected | Pete | 11/10/26 | passed | Entered the `[Demo] Cancelled bakery bags` code: "This reservation was cancelled." Still `CANCELLED`. |
+| US7 | 3: ended window shows active reservations as no-show | Pete | 11/10/26 | passed | Under Reservations on your listings, the ended tray shows Lucky Guy, 1 portion, "No-show", and the query shows `NO_SHOW`. No pickup codes appear on the page. |
+| US8 | 1: only listings with all selected tags shown | Pete | 11/14/26 | passed | Vegan + Gluten-free showed only Vegan lentil soup (`[Demo] Sold-out soup` stayed hidden). Vegan + Vegetarian showed no listings and "No listings match your filters." The checked tags stayed checked. |
+| US8 | 2: location filter, combinable with tags | Pete | 11/14/26 | passed | Campus Cafe counter showed Vegan lentil soup and `[Demo] Campus Cafe sandwiches`. Adding Vegan showed only Vegan lentil soup. The location stayed selected. |
+| US8 | 3: Clear filters shows all available listings | Pete | 11/14/26 | passed | Clear filters showed all four available listings again, with no tags checked and "Any location" selected. |
 
 ## Test cases
 
@@ -150,6 +153,22 @@ account.
 | 2 | Pick a listing with exactly 1 portion remaining. Try to reserve 2. | An error says there aren't enough portions. No reservation is created and portions remaining is still 1. |
 | 3 | Reserve 1 portion from a listing. Then try to reserve from the same listing again. | A message says you already have a reservation for this listing. No second reservation is created. |
 | 4 | Pick a listing with exactly 1 portion remaining. Open the app in a normal window and a private window, logged in as two different students. Open the reserve form for that listing in both, then click Reserve in both as close together as you can. | Exactly one window gets a pickup code. The other gets an error. Portions remaining is 0, not -1. |
+
+### US8: Filter listings
+
+Uses the seed data (#53 and #56). Start from fresh data (`docker compose down -v`,
+then `docker compose up --build`) and test within 4 hours: the seed listings'
+pickup windows end 4 to 6 hours after startup. Log in as Lucky Guy and click
+**Browse available listings**. Before filtering, four listings show: Vegetarian
+grain bowls (Student Union counter; Vegetarian), Vegan lentil soup (Campus Cafe
+counter; Vegan, Gluten-free), `[Demo] Campus Cafe sandwiches` (Campus Cafe
+counter; no tags), and Bakery bags (Bakery pickup desk; no tags).
+
+| AC | What to do | What should happen |
+| --- | --- | --- |
+| 1 | Check **Vegan** and **Gluten-free**, then click **Filter**. Then uncheck Gluten-free, check **Vegetarian**, and click **Filter**. | First: only Vegan lentil soup (`[Demo] Sold-out soup` has the same tags but stays hidden). Second: no listings and a message that none match the filters, because a listing must have every selected tag. The chosen tags stay checked. |
+| 2 | Click **Clear filters**. Choose **Campus Cafe counter** and click **Filter**. Then also check **Vegan** and click **Filter**. | First: Vegan lentil soup and `[Demo] Campus Cafe sandwiches`. Second: only Vegan lentil soup. The location stays selected. |
+| 3 | With filters applied, click **Clear filters**. | All four available listings show again, with no tags checked and "Any location" selected. |
 
 ### US7: Confirm pickup
 
