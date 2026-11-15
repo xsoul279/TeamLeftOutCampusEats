@@ -1,16 +1,16 @@
+from .pickups import mark_no_shows
 from datetime import datetime
 from zoneinfo import ZoneInfo
-import secrets
 
 from flask import (
-    Blueprint, abort, flash, redirect, render_template, request, url_for,
+    Blueprint, abort, flash, redirect, render_template, url_for,
 )
 from flask_login import current_user, login_required
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import select
 
 from .extensions import db
-from .models import DietaryTag, Listing, Reservation, ReservationStatus
+from .models import Listing, Reservation, ReservationStatus
 
 reservations_bp = Blueprint("reservations", __name__)
 def _local_now():
@@ -22,7 +22,12 @@ def _local_now():
 def view_reservations():
     if current_user.role != "student":
         abort(403, description="Only students can view reservations.")
-
+    try:
+        mark_no_shows()
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        
     now = _local_now()
     reservations = db.session.scalars(
         select(Reservation)
@@ -45,7 +50,7 @@ def cancel_reservation(reservation_id):
     if not reservation or reservation.student_id != current_user.id:
         abort(404, description="Reservation not found.")
 
-    listing = db.session.get(Listing, reservation.listing_id)
+    listing = db.session.get(Listing, reservation.listing_id, with_for_update=True)
     db.session.refresh(reservation, with_for_update=True)
     
     if listing.pickup_end <= _local_now():

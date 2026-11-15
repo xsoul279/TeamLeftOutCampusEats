@@ -131,6 +131,79 @@ windows. Ordinary `docker compose down` preserves data. Do not use `down -v` on
 a project whose data you want to retain. A fresh volume also restores the listed
 demo passwords; preserved accounts keep any password changes.
 
+# Run the Selenium registration and login tests
+
+You need Docker Compose and Python 3.11 or newer on your host. The test starts
+Chrome in headless mode. Selenium Manager finds an installed Chrome and a
+matching ChromeDriver, or can download Chrome for Testing and ChromeDriver
+when they are missing. Allow network access for the first download.
+[Selenium Manager documentation](https://www.selenium.dev/documentation/selenium_manager/)
+
+From the repository root, create a virtual environment and install the test
+dependencies. On macOS and Linux, run the following.
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements_black_box.txt
+```
+
+In Windows PowerShell, use the following commands.
+
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements_black_box.txt
+```
+
+The tests create accounts. Use a separate Compose project with its local
+PostgreSQL database. Leave `DATABASE_URL` empty in your shell and in any
+`.env` file. Start the app and wait for Compose to report it healthy.
+
+```sh
+docker compose -p campuseats-selenium up --build --wait
+python -m pytest -q tests/auto_test.py
+```
+
+The test uses `http://localhost:5000` by default. If port 5000 is occupied or
+`localhost` reaches another service, choose a free port and set both
+`WEB_PORT` for Compose and `BASE_URL` for pytest. Keep the URL free of a
+trailing slash. On macOS and Linux, for example, use port 5001.
+
+```bash
+WEB_PORT=5001 docker compose -p campuseats-selenium up --build --wait
+BASE_URL=http://127.0.0.1:5001 python -m pytest -q tests/auto_test.py
+```
+
+In PowerShell, set the port and URL in the current session.
+
+```powershell
+$env:WEB_PORT = "5001"
+docker compose -p campuseats-selenium up --build --wait
+$env:BASE_URL = "http://127.0.0.1:5001"
+python -m pytest -q tests/auto_test.py
+Remove-Item Env:WEB_PORT, Env:BASE_URL
+```
+
+Expect `9 passed`. The file collects student and vendor registration and
+login, duplicate email rejection followed by login, blank username, email,
+and password cases, and wrong-password rejection. Two cases exercise the
+same combined blank-field scenario. To list the cases, run
+`python -m pytest --collect-only -q tests/auto_test.py`.
+
+If a browser wait times out, open the app's `/register` page at your chosen
+URL and check `docker compose -p campuseats-selenium ps` and
+`docker compose -p campuseats-selenium logs web db`. For Chrome startup or
+driver errors, check that Selenium Manager can download its files or that
+your installed Chrome and ChromeDriver versions match. If Python cannot
+import Selenium or pytest, activate the virtual environment and rerun the
+dependency install.
+
+After testing, stop the test project with
+`docker compose -p campuseats-selenium down`. Add `-v` only when you intend
+to delete the disposable test database.
+
+
 # Local Development
 
 Requires Python 3.10 or newer. From the repository root:
