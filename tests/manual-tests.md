@@ -122,6 +122,11 @@ update the Date and Result columns.
 | US8 | 1: only listings with all selected tags shown | Pete | 11/14/26 | passed | Vegan + Gluten-free showed only Vegan lentil soup (`[Demo] Sold-out soup` stayed hidden). Vegan + Vegetarian showed no listings and "No listings match your filters." The checked tags stayed checked. |
 | US8 | 2: location filter, combinable with tags | Pete | 11/14/26 | passed | Campus Cafe counter showed Vegan lentil soup and `[Demo] Campus Cafe sandwiches`. Adding Vegan showed only Vegan lentil soup. The location stayed selected. |
 | US8 | 3: Clear filters shows all available listings | Pete | 11/14/26 | passed | Clear filters showed all four available listings again, with no tags checked and "Any location" selected. |
+| US5 | 1: own listings, statuses, and portion counts | Pete | 11/14/26 | passed | US5-1. Manage my listings showed every Flat Top Grill listing with Active / Ended / Cancelled and reserved / remaining counts; Campus Cafe's listing was not shown. |
+| US5 | 2: edit without reservations, applying US2 validation | Pete | 11/14/26 | passed | US5-2. A changed title saved ("Listing updated."). 0 portions was blocked by the form; the server also rejected 0, 101, 1.5, text, a reversed window, and a past window with US2's messages, leaving the listing unchanged. |
+| US5 | 3: portions cannot drop below the reserved count | Pete | 11/14/26 | passed | US5-3. With 2 grain bowls reserved, 1 portion was rejected ("can't be lower than the 2 already reserved"); 2 saved with 0 remaining. |
+| US5 | 4: cancellation hides the listing and cancels active reservations | Pete | 11/14/26 | passed | US5-4. Cancelled Vegan lentil soup after a confirm prompt: "1 active reservation(s) were cancelled", Lucky Guy's reservation shows Cancelled, and the listing no longer appears to students. |
+| US5 | 5: reservation names/portions and vendor ownership | Pete | 11/14/26 | passed | US5-5. The listing page showed Lucky Guy and his portions. Campus Cafe opening a Flat Top Grill listing's address got "Not Found"; students get 403 on all US5 pages. |
 
 ## Test cases
 
