@@ -252,3 +252,52 @@ h2 {
     padding: 1.5rem;
   }
 }
+
+.impact-dashboard {
+  padding-block: 2rem;
+}
+
+.impact-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 1rem;
+  margin-block: 1.5rem;
+}
+
+.impact-filters label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.impact-filters input {
+  padding: 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 0.35rem;
+  font: inherit;
+}
+
+.impact-filters button {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.impact-totals {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, 15rem), 1fr)
+  );
+  gap: 1rem;
+}
+
+.impact-totals dt {
+  font-weight: 600;
+}
+
+.impact-totals dd {
+  margin: 0.5rem 0 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
