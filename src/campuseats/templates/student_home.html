@@ -1,4 +1,6 @@
 {% extends "base.html" %}
 {% block content %}<h1>Student Home</h1>
 <p><a class="button" href="{{ url_for('listings.browse_listings') }}">Browse available listings</a></p>
+<p><a class="button" href="{{ url_for('reservations.view_reservations') }}">View My Reservations</a></p>
+
 {% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>My Reservations</h1>
+{% for reservation in reservations %}
+<div class="reservation">
+<h2><span class="listing title">{{ reservation.listing.title }}</span></h2>
+
+<p><strong>Vendor</strong> {{ reservation.listing.vendor.username }}</p>
+<p><strong>Reservation Pickup Code</strong> {{ reservation.pickup_code }}</p>
+<p><strong>Reservation Status</strong> {{ reservation.status.value }}</p>
+<p><strong>Reservation Portions</strong> {{ reservation.portions }}</p>
+<p><strong>Reservation Pickup Location</strong> {{ reservation.listing.pickup_location }}</p>
+<p><strong>Reservation Pickup Time</strong> {{ reservation.listing.pickup_start.strftime("%m/%d/%Y %I:%M %p") }} to {{ reservation.listing.pickup_end.strftime("%m/%d/%Y %I:%M %p") }}</p>
+
+{% if reservation.status.name == "ACTIVE" and reservation.listing.pickup_end > now %}
+<form method="post" action="{{ url_for('reservations.cancel_reservation', reservation_id=reservation.id) }}" onsubmit="return confirm('Are you sure you want to cancel this reservation?');">
+<button class="button" type="submit">Cancel Reservation</button>
+</form>
+{% endif %}
+</div>
+{% else %}
+<p>You have no reservations.</p>
+{% endfor %}
+    
+<p>{{ reservations|length }} reservations</p>
+
+<p><a class="button" href="{{ url_for('listings.browse_listings') }}">Browse available listings</a></p> 
+<p><a class="button" href="{{ url_for('auth.home') }}">Back to Student Home</a></p>
+{% endblock %}
