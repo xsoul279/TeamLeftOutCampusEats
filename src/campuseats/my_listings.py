@@ -9,6 +9,7 @@ from werkzeug.datastructures import MultiDict
 from .extensions import db
 from .listings import validate_listing_form
 from .models import DietaryTag, Listing, ReservationStatus
+from .pickups import mark_no_shows
 
 my_listings_bp = Blueprint("my_listings", __name__)
 
@@ -47,6 +48,8 @@ def _form_from(listing):
 def my_listings():
     """AC 1: every listing of mine, with status and portions reserved / remaining."""
     _vendor_only()
+    mark_no_shows(current_user.id)  # US7: store no-shows before showing statuses
+    db.session.commit()
     listings = db.session.scalars(
         select(Listing).where(Listing.vendor_id == current_user.id)
         .order_by(Listing.pickup_start.desc())
@@ -59,6 +62,8 @@ def my_listings():
 def listing_detail(listing_id):
     """AC 5: who reserved (name, portions, status)."""
     _vendor_only()
+    mark_no_shows(current_user.id)  # US7: store no-shows before showing statuses
+    db.session.commit()
     listing = _own_listing(listing_id)
     reservations = sorted(listing.reservations, key=lambda r: r.created_at)
     return render_template("listing_detail.html", listing=listing,
