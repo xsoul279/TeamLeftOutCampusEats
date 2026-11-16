@@ -1,3 +1,59 @@
+# Final re-test - 2026-11-15
+
+Tested by Pete on a fresh clone of `dev` at commit
+`a90b8afc9fff5d72517228d514802952d8685a4e` (after #77 and #78), with
+`docker compose up --build` and fresh seed data. Every acceptance criterion for
+US1–US10 was run in the browser, in an order that keeps the data later rows need.
+PostgreSQL was queried to confirm stored data; its only writes were deleting one
+test rating so US10 AC 1 could be redone with a short comment, and cancelling every
+listing for US3 AC 4, run last. No application code was changed for this re-test (#32).
+
+| User story | Acceptance criterion | Tester | Date | Result | Notes |
+| --- | --- | --- | --- | --- | --- |
+| US1 | 1: register either role and redirect to login | Pete | 11/15/26 | passed | Registered a retest student and a retest vendor with new emails and 8+ character passwords; each went to the login page. |
+| US1 | 2: reject duplicate email | Pete | 11/15/26 | passed | Registering again with the student's email in uppercase showed "Email is already registered." and created no account. |
+| US1 | 3: reject and identify empty required fields | Pete | 11/15/26 | passed | Blank username, email, password, role, and all fields each showed its own message; no account was added. A 7-character password was rejected. |
+| US1 | 4: store hashed passwords | Pete | 11/15/26 | passed | psql showed the new accounts' password hashes start with `scrypt:`, not the submitted passwords. |
+| US1 | 5: correct role home; wrong password stays logged out | Pete | 11/15/26 | passed | A wrong password showed "Invalid email/password." and stayed on login; correct passwords opened Student Home and Vendor Home. |
+| US2 | 1: store a vendor-owned listing with its fields and tags | Pete | 11/15/26 | passed | Posted "Retest one portion" (1 portion, Vegetarian + Gluten-free) and a 100-portion listing with all 5 tags; both showed "Listing created successfully." and psql showed both under Flat Top Grill. |
+| US2 | 2: reject reversed or past-ended pickup windows | Pete | 11/15/26 | passed | End before start showed "Pickup end time must be after pickup start time."; a past window showed the "must be in the future" errors. Neither was stored. |
+| US2 | 3: deny student access to posting page | Pete | 11/15/26 | passed | As Lucky Guy, `/listings/new` returned 403 Forbidden. |
+| US3 | 1: only available listings shown | Pete | 11/15/26 | passed | Browse showed the grain bowls, lentil soup, Campus Cafe sandwiches and bakery bags; the ended tray, cancelled bakery bags and sold-out soup were hidden. |
+| US3 | 2: listing shows all its details | Pete | 11/15/26 | passed | Each card showed title, vendor, pickup location, dietary tags, portions remaining and pickup window. |
+| US3 | 3: sorted by pickup end, soonest first | Pete | 11/15/26 | passed | Pickup end times ran soonest first down the page. |
+| US3 | 4: message when no listings | Pete | 11/15/26 | passed | Run last: after cancelling every listing in psql, Browse showed "No listings are available right now." |
+| US4 | 1: reserve portions, get pickup code | Pete | 11/15/26 | passed | Reserved 2 grain bowls: 6-character pickup code; remaining went from 8 to 6. |
+| US4 | 2: more portions than remain rejected | Pete | 11/15/26 | passed | Asking for 2 of "Retest one portion" (1 left) showed "Not enough portions remaining to reserve."; still 1 left. |
+| US4 | 3: second reservation on same listing rejected | Pete | 11/15/26 | passed | Reserved 1 lentil soup, then tried again: "You already have a reservation for this listing." |
+| US4 | 4: last portion, only one student wins | Pete | 11/15/26 | passed | Lucky Guy and the retest student reserved the last "Retest one portion" from two windows at once: one got a code, the other an error; remaining 0. |
+| US5 | 1: My Listings shows status and portions reserved/remaining | Pete | 11/15/26 | passed | Manage my listings showed every Flat Top Grill listing with Active / Ended / Cancelled and reserved / remaining counts. |
+| US5 | 2: edit a listing with no reservations, US2 validation | Pete | 11/15/26 | passed | Edited "Retest hundred portions" and the changes saved; a bad pickup window showed the same errors as US2. |
+| US5 | 3: portions can't go below the number reserved | Pete | 11/15/26 | passed | On Vegan lentil soup (1 reserved), portions below the reserved count were rejected. |
+| US5 | 4: cancelled listing hidden; its active reservations cancelled | Pete | 11/15/26 | passed | Cancelled a listing with an active reservation: it left Browse and the reservation showed Cancelled. |
+| US5 | 5: see who reserved; no access to other vendors' listings | Pete | 11/15/26 | passed | The listing page showed each student's name and portions. As Campus Cafe, pasting a Flat Top Grill listing's edit link showed "Listing not found." |
+| US6 | 1: My Reservations shows all details and status | Pete | 11/15/26 | passed | Each reservation showed title, vendor, location, pickup window, portions, pickup code and status (active, picked up, cancelled, no-show). |
+| US6 | 2: cancel an active reservation; portions returned | Pete | 11/15/26 | passed | Cancelled the 2 grain bowls after the confirm popup: status Cancelled, and Browse showed 2 more portions. |
+| US6 | 3: no Cancel option on inactive reservations | Pete | 11/15/26 | passed | The picked-up, cancelled and no-show reservations had no Cancel button. |
+| US7 | 1: in-window code marks picked up, shows student and portions | Pete | 11/15/26 | passed | Flat Top Grill entered the soup code: "Picked up: Lucky Guy, 2 portion(s) to hand out."; psql showed PICKED_UP. |
+| US7 | 1b: code after the pickup window rejected | Pete | 11/15/26 | passed | The ended vegetarian tray's code showed "The pickup window for this listing has ended." |
+| US7 | 2a: unknown code rejected | Pete | 11/15/26 | passed | `ZZZZZZ` showed "No reservation matches code ZZZZZZ." |
+| US7 | 2b: another vendor's code rejected | Pete | 11/15/26 | passed | Campus Cafe entering the soup code showed "That code isn't for one of your listings."; still ACTIVE. |
+| US7 | 2c: already-used code rejected | Pete | 11/15/26 | passed | The soup code again showed "This reservation was already picked up." |
+| US7 | 2d: cancelled code rejected | Pete | 11/15/26 | passed | The cancelled bakery bags code showed "This reservation was cancelled." |
+| US7 | 3: ended window shows active reservations as no-show | Pete | 11/15/26 | passed | The ended tray showed Lucky Guy, 1 portion, "No-show", with no codes on the page; psql showed NO_SHOW. |
+| US8 | 1: only listings with all selected tags shown | Pete | 11/15/26 | passed | Vegan + Gluten-free showed only Vegan lentil soup; Vegan + Vegetarian showed "No listings match your filters." Tags stayed checked. |
+| US8 | 2: location filter, combinable with tags | Pete | 11/15/26 | passed | Campus Cafe counter showed the lentil soup and Campus Cafe sandwiches; adding Vegan showed only the lentil soup. The location stayed selected. |
+| US8 | 3: Clear filters shows all available listings | Pete | 11/15/26 | passed | Clear filters showed all four listings, no tags checked, "Any location". |
+| US9 | 1: dashboard shows listings, portions, picked up, no-shows for a date range | Pete | 11/15/26 | passed | Default range (this month): listings posted and portions posted matched psql's count and sum, and portions picked up and the no-show count matched the reservations-by-status query. That query's extra CANCELLED row isn't a dashboard value (not part of AC 1 or the rate). |
+| US9 | 2: no-show rate as a percentage of reserved portions | Pete | 11/15/26 | passed | The rate matched NO_SHOW portions ÷ (ACTIVE + PICKED_UP + NO_SHOW portions). |
+| US9 | 3: empty range shows all zeros, no error | Pete | 11/15/26 | passed | 2020-01-01 to 2020-01-31 showed every value as 0 and a 0.0% rate, with no error. |
+| US10 | 1: rate a picked-up reservation 1–5 stars, optional comment ≤ 300 chars | Pete | 11/15/26 | passed | The comment box stops at 300 characters: a longer paste was cut to 300 and saved. That rating was deleted in psql, and the soup was re-rated 4 stars with a short comment: "Rating submitted successfully." |
+| US10 | 2: one rating per picked-up reservation; other statuses can't be rated | Pete | 11/15/26 | passed | The soup no longer offered "Rate this pickup"; the cancelled, no-show and active reservations had no rate link. |
+| US10 | 3: vendors see average rating and comments per listing | Pete | 11/15/26 | passed | Flat Top Grill's soup page showed "Average rating: 4.0/5 (1 rating)" and the comment; Campus Cafe got Not Found. |
+
+All 40 acceptance rows passed on the final Sprint 3 application (US1–US10). Earlier
+runs and story specifications are kept below.
+
 # US1 and US2 release re-test - 2026-10-30
 
 Tested by Rinkatur5 against merged `dev` commit
@@ -112,6 +168,24 @@ update the Date and Result columns.
 | US4 | 2: more portions than remain rejected | Ethan | 11/08/26 | passed | Asked for 2 bakery bags with 1 left: "Not enough portions remaining" error shown, no reservation created, still 1 left. |
 | US4 | 3: second reservation on same listing rejected | Ethan | 11/08/26 | passed | Reserved 1 lentil soup, then tried again: "You already have a reservation" error shown, still only one reservation and 5 left. |
 | US4 | 4: last portion, only one student wins | Ethan | 11/08/26 | passed | Two students in separate windows reserved the last bakery bag: one got a code, the other an error, and 0 left (not -1). Also ran 20 rounds of truly simultaneous requests from a script: exactly one winner every round, never below 0. |
+| US6 | 1: Students can view reservations with all relevant details | Caine | 11/13/2026 | passed | All reservations regardless of status are displayed with vendor, code, status, portion, location, and pickup time information. |
+| US6 | 2: Active reservations w/valid pickup windows are cancellable and portions are returned. | Caine | 11/13/2026 | passed | Only active reservations with valid pickup windows display a cancellation button. Portions go from 6 to 5 and when the reservation is cancelled, the portions on the listing goes back up to 6. |
+| US6 | 3: Inactive reservations/an invalid pickup window don't display a cancel button | Caine | 11/13/2026 | passed | Only reservations that are active and have a valid pickup window display the 'Cancel Reservation' button. |
+| US7 | 1: in-window code marks picked up, shows student and portions | Pete | 11/10/26 | passed | Flat Top Grill entered the `[Demo] Sold-out soup` code: "Picked up: Lucky Guy, 2 portion(s) to hand out." The query shows `PICKED_UP`. |
+| US7 | 1b: code after the pickup window rejected | Pete | 11/10/26 | passed | Entered the `[Demo] Ended vegetarian tray` code: "The pickup window for this listing has ended." Not marked `PICKED_UP` (the query shows `NO_SHOW`). |
+| US7 | 2a: unknown code rejected | Pete | 11/10/26 | passed | Flat Top Grill entered `ZZZZZZ`: "No reservation matches code ZZZZZZ." No reservation changed. |
+| US7 | 2b: another vendor's code rejected | Pete | 11/10/26 | passed | Campus Cafe entered the soup code: "That code isn't for one of your listings." The soup is still `ACTIVE`. |
+| US7 | 2c: already-used code rejected | Pete | 11/10/26 | passed | Entered the soup code again: "This reservation was already picked up." Still `PICKED_UP`. |
+| US7 | 2d: cancelled code rejected | Pete | 11/10/26 | passed | Entered the `[Demo] Cancelled bakery bags` code: "This reservation was cancelled." Still `CANCELLED`. |
+| US7 | 3: ended window shows active reservations as no-show | Pete | 11/10/26 | passed | Under Reservations on your listings, the ended tray shows Lucky Guy, 1 portion, "No-show", and the query shows `NO_SHOW`. No pickup codes appear on the page. |
+| US8 | 1: only listings with all selected tags shown | Pete | 11/14/26 | passed | Vegan + Gluten-free showed only Vegan lentil soup (`[Demo] Sold-out soup` stayed hidden). Vegan + Vegetarian showed no listings and "No listings match your filters." The checked tags stayed checked. |
+| US8 | 2: location filter, combinable with tags | Pete | 11/14/26 | passed | Campus Cafe counter showed Vegan lentil soup and `[Demo] Campus Cafe sandwiches`. Adding Vegan showed only Vegan lentil soup. The location stayed selected. |
+| US8 | 3: Clear filters shows all available listings | Pete | 11/14/26 | passed | Clear filters showed all four available listings again, with no tags checked and "Any location" selected. |
+| US5 | 1: own listings, statuses, and portion counts | Pete | 11/14/26 | passed | US5-1. Manage my listings showed every Flat Top Grill listing with Active / Ended / Cancelled and reserved / remaining counts; Campus Cafe's listing was not shown. |
+| US5 | 2: edit without reservations, applying US2 validation | Pete | 11/14/26 | passed | US5-2. A changed title saved ("Listing updated."). 0 portions was blocked by the form; the server also rejected 0, 101, 1.5, text, a reversed window, and a past window with US2's messages, leaving the listing unchanged. |
+| US5 | 3: portions cannot drop below the reserved count | Pete | 11/14/26 | passed | US5-3. With 2 grain bowls reserved, 1 portion was rejected ("can't be lower than the 2 already reserved"); 2 saved with 0 remaining. |
+| US5 | 4: cancellation hides the listing and cancels active reservations | Pete | 11/14/26 | passed | US5-4. Cancelled Vegan lentil soup after a confirm prompt: "1 active reservation(s) were cancelled", Lucky Guy's reservation shows Cancelled, and the listing no longer appears to students. |
+| US5 | 5: reservation names/portions and vendor ownership | Pete | 11/14/26 | passed | US5-5. The listing page showed Lucky Guy and his portions. Campus Cafe opening a Flat Top Grill listing's address got "Not Found"; students get 403 on all US5 pages. |
 
 ## Test cases
 
@@ -140,3 +214,59 @@ account.
 | 2 | Pick a listing with exactly 1 portion remaining. Try to reserve 2. | An error says there aren't enough portions. No reservation is created and portions remaining is still 1. |
 | 3 | Reserve 1 portion from a listing. Then try to reserve from the same listing again. | A message says you already have a reservation for this listing. No second reservation is created. |
 | 4 | Pick a listing with exactly 1 portion remaining. Open the app in a normal window and a private window, logged in as two different students. Open the reserve form for that listing in both, then click Reserve in both as close together as you can. | Exactly one window gets a pickup code. The other gets an error. Portions remaining is 0, not -1. |
+
+### US8: Filter listings
+
+Uses the seed data (#53 and #56). Start from fresh data (`docker compose down -v`,
+then `docker compose up --build`) and test within 4 hours: the seed listings'
+pickup windows end 4 to 6 hours after startup. Log in as Lucky Guy and click
+**Browse available listings**. Before filtering, four listings show: Vegetarian
+grain bowls (Student Union counter; Vegetarian), Vegan lentil soup (Campus Cafe
+counter; Vegan, Gluten-free), `[Demo] Campus Cafe sandwiches` (Campus Cafe
+counter; no tags), and Bakery bags (Bakery pickup desk; no tags).
+
+| AC | What to do | What should happen |
+| --- | --- | --- |
+| 1 | Check **Vegan** and **Gluten-free**, then click **Filter**. Then uncheck Gluten-free, check **Vegetarian**, and click **Filter**. | First: only Vegan lentil soup (`[Demo] Sold-out soup` has the same tags but stays hidden). Second: no listings and a message that none match the filters, because a listing must have every selected tag. The chosen tags stay checked. |
+| 2 | Click **Clear filters**. Choose **Campus Cafe counter** and click **Filter**. Then also check **Vegan** and click **Filter**. | First: Vegan lentil soup and `[Demo] Campus Cafe sandwiches`. Second: only Vegan lentil soup. The location stays selected. |
+| 3 | With filters applied, click **Clear filters**. | All four available listings show again, with no tags checked and "Any location" selected. |
+
+### US7: Confirm pickup
+
+Uses the extra seed data (#56): vendors Flat Top Grill and Campus Cafe, and
+Lucky Guy's reservations on `[Demo] Sold-out soup` (active, 2 portions, window
+open), `[Demo] Cancelled bakery bags` (cancelled), and `[Demo] Ended vegetarian
+tray` (active, window ended). Start from fresh data (`docker compose down -v`,
+then `docker compose up --build`) and run AC 1 within 4 hours: the soup's pickup
+window ends 4 hours after startup. Pickup codes are random; look them up with:
+
+`docker compose exec db psql -U campuseats -d campuseats -c "SELECT l.title, u.username AS vendor, r.pickup_code, r.portions, r.status FROM reservations r JOIN listings l ON l.id = r.listing_id JOIN users u ON u.id = l.vendor_id ORDER BY l.title"`
+
+Run the rows in this order: 2a, 2b, 1, 2c, 2d, 1b, 3 (2b needs the soup code still
+active; 2c needs it already used).
+
+| AC | What to do | What should happen |
+| --- | --- | --- |
+| 2a | Log in as Flat Top Grill. Click **Confirm a pickup** on Vendor Home (`/pickups`) and enter `ZZZZZZ` (not in the query output). | Rejected with a message that the code was not found. No reservation changes. |
+| 2b | Log out. Log in as Campus Cafe and enter the `[Demo] Sold-out soup` code. | Rejected with a message that the code isn't for one of your listings. The soup reservation is still `ACTIVE`. |
+| 1 | Log out. Log in as Flat Top Grill and enter the `[Demo] Sold-out soup` code. | The page shows Lucky Guy and 2 portions to hand out. The query shows the reservation as `PICKED_UP`. |
+| 2c | Enter the same soup code again. | Rejected with a message that the code was already used. Status stays `PICKED_UP`. |
+| 2d | Enter the `[Demo] Cancelled bakery bags` code. | Rejected with a message that the reservation was cancelled. Status stays `CANCELLED`. |
+| 1b | Enter the `[Demo] Ended vegetarian tray` code. | Rejected with a message that the pickup window has ended. The reservation is not marked `PICKED_UP`. |
+| 3 | On the same page, look under **Reservations on your listings** for `[Demo] Ended vegetarian tray` (its pickup window has ended). | Lucky Guy's reservation is shown with status "No-show", and the query shows `NO_SHOW`. |
+
+### US9(Impact Board):
+
+| User story | Acceptance criterion | Tester | Date | Result |
+| --- | --- | --- | --- | --- |
+| US9 | 1: Given I am logged in as a vendor, when I open the dashboard and choose a date range, then I see the number of listings posted, portions posted, portions picked up, and no-show count for my listings in that range. | Soul | 11/15/26 | passed |
+| US9 | 2: The no-show rate is shown as a percentage of reserved portions. | Soul | 11/15/26 | passed |
+| US9 | 3: Given there is no data in the range, then all values show 0 and no error occurs. | Soul | 11/15/26 | passed |
+
+### US10(Rate a pickup):
+
+| User story | Acceptance criterion | Tester | Date | Result |
+| --- | --- | --- | --- | --- |
+| US10 | 1: Rating of 1–5 stars and a comment up to 300 characters | Soul | 11/15/26 | passed |
+| US10 | 2: Only the owner can rate a picked-up reservation once | Soul | 11/15/26 | passed |
+| US10 | 3: Vendors see their listings' average rating and comments | Soul | 11/15/26 | passed |

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Impact Dashboard | CampusEats{% endblock %}
+
+{% block content %}
+<section class="impact-dashboard" aria-labelledby="impact-title">
+    <h1 id="impact-title">Impact Dashboard</h1>
+    <p>See the impact of your listings posted during the selected dates.</p>
+
+    <form class="impact-filters"
+          method="get"
+          action="{{ url_for('impact.dashboard') }}">
+        <label for="start-date">
+            Start date
+            <input id="start-date"
+                   name="start_date"
+                   type="date"
+                   value="{{ start_date }}"
+                   required>
+        </label>
+
+        <label for="end-date">
+            End date
+            <input id="end-date"
+                   name="end_date"
+                   type="date"
+                   value="{{ end_date }}"
+                   required>
+        </label>
+
+        <button class="button" type="submit">Show impact</button>
+    </form>
+
+    {% if metrics is not none %}
+    <p>Both dates are included. The default range is this month through today.</p>
+
+    <dl class="impact-totals">
+        <div class="step">
+            <dt>Listings posted</dt>
+            <dd>{{ metrics.listings_posted }}</dd>
+        </div>
+
+        <div class="step">
+            <dt>Portions posted</dt>
+            <dd>{{ metrics.portions_posted }}</dd>
+        </div>
+
+        <div class="step">
+            <dt>Portions picked up</dt>
+            <dd>{{ metrics.portions_picked_up }}</dd>
+        </div>
+
+        <div class="step">
+            <dt>No-show reservations</dt>
+            <dd>{{ metrics.no_show_count }}</dd>
+        </div>
+
+        <div class="step">
+            <dt>Reserved portions</dt>
+            <dd>{{ metrics.portions_reserved }}</dd>
+        </div>
+
+        <div class="step">
+            <dt>No-show rate</dt>
+            <dd>{{ "%.1f" | format(metrics.no_show_rate) }}%</dd>
+        </div>
+    </dl>
+
+    <p>
+        No-show rate = no-show portions / reserved portions.
+        Cancelled reservations are excluded; active, picked-up,
+        and no-show reservations are included.
+    </p>
+
+    {% if metrics.listings_posted == 0 %}
+    <p>No listings were posted in this date range.</p>
+    {% endif %}
+    {% endif %}
+
+    <p>
+        <a href="{{ url_for('auth.home') }}">Back to Vendor Home</a>
+    </p>
+</section>
+{% endblock %}
