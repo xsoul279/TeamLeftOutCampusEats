@@ -198,3 +198,19 @@ active; 2c needs it already used).
 | 2d | Enter the `[Demo] Cancelled bakery bags` code. | Rejected with a message that the reservation was cancelled. Status stays `CANCELLED`. |
 | 1b | Enter the `[Demo] Ended vegetarian tray` code. | Rejected with a message that the pickup window has ended. The reservation is not marked `PICKED_UP`. |
 | 3 | On the same page, look under **Reservations on your listings** for `[Demo] Ended vegetarian tray` (its pickup window has ended). | Lucky Guy's reservation is shown with status "No-show", and the query shows `NO_SHOW`. |
+
+### US9(Impact Board):
+
+| User story | Acceptance criterion | Tester | Date | Result |
+| --- | --- | --- | --- | --- |
+| US9 | 1: Given I am logged in as a vendor, when I open the dashboard and choose a date range, then I see the number of listings posted, portions posted, portions picked up, and no-show count for my listings in that range. | Soul | 11/15/26 | passed |
+| US9 | 2: The no-show rate is shown as a percentage of reserved portions. | Soul | 11/15/26 | passed |
+| US9 | 3: Given there is no data in the range, then all values show 0 and no error occurs. | Soul | 11/15/26 | passed |
+
+### US10(Rate a pickup):
+
+| User story | Acceptance criterion | Tester | Date | Result |
+| --- | --- | --- | --- | --- |
+| US10 | 1: Rating of 1–5 stars and a comment up to 300 characters | Soul | 11/15/26 | passed |
+| US10 | 2: Only the owner can rate a picked-up reservation once | Soul | 11/15/26 | passed |
+| US10 | 3: Vendors see their listings' average rating and comments | Soul | 11/15/26 | passed |

@@ -17,6 +17,23 @@
 <button class="button" type="submit">Cancel Reservation</button>
 </form>
 {% endif %}
+{% if reservation.rating %}
+<p>
+    <strong>Your rating:</strong>
+    {{ reservation.rating.stars }}/5
+</p>
+
+{% if reservation.rating.comment %}
+<p>{{ reservation.rating.comment }}</p>
+{% endif %}
+
+{% elif reservation.status.name == "PICKED_UP" %}
+<p>
+    <a href="{{ url_for('ratings.rate_pickup', reservation_id=reservation.id) }}">
+        Rate this pickup
+    </a>
+</p>
+{% endif %}
 </div>
 {% else %}
 <p>You have no reservations.</p>

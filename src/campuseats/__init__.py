@@ -33,6 +33,7 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     from .pickups import pickups_bp
     from .reservations import reservations_bp
     from .impact import impact_bp
+    from .ratings import ratings_bp
 
     from .seed import seed_command
 
@@ -44,5 +45,6 @@ def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     app.register_blueprint(pickups_bp)
     app.register_blueprint(reservations_bp)
     app.register_blueprint(impact_bp)
+    app.register_blueprint(ratings_bp)
     app.cli.add_command(seed_command)
     return app
